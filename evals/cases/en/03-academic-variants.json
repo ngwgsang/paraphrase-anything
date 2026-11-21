@@ -1,0 +1,18 @@
+{
+  "id": "en-03-academic-variants",
+  "lang": "en",
+  "category": "variants",
+  "mode": "standard",
+  "format": "raw",
+  "input": "Recent clinical trials in 2023 indicated that compound X-42 reduced inflammation by 40% without adverse events.",
+  "variants": [
+    "Without causing adverse events, compound X-42 decreased inflammation by 40% during clinical trials conducted in 2023.",
+    "Findings from 2023 clinical investigations showed that compound X-42 curtailed inflammatory responses by 40% without any adverse events.",
+    "In 2023 trials, compound X-42 lowered inflammation by 40% without negative side effects."
+  ],
+  "expected_invariants": {
+    "numbers": ["2023", "40%"],
+    "terms": ["X-42"]
+  },
+  "forbidden": ["summary", "translation"]
+}

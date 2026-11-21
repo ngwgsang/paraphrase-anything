@@ -6,3 +6,6 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+
+# Eval reports
+evals/report.json

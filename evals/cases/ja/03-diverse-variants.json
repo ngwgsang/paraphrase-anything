@@ -1,0 +1,17 @@
+{
+  "id": "ja-03-diverse-variants",
+  "lang": "ja",
+  "category": "variants",
+  "mode": "standard",
+  "format": "raw",
+  "input": "新研究所は2025年に完成予定で、AI研究に従事する100名の研究員が常駐する見込みである。",
+  "variants": [
+    "AI開発を担う100人の専門研究者を迎え入れ、新拠点は2025年の稼働開始を予定している。",
+    "2025年の開設に向けて整備が進む新研究所には、人工知能分野のエキスパート100名が配置される運びだ。",
+    "次世代AI領域の研究員100名が在籍予定の新ラボは、2025年に竣工を迎える計画だ。"
+  ],
+  "expected_invariants": {
+    "numbers": ["2025", "100"]
+  },
+  "forbidden": ["summary", "translation"]
+}

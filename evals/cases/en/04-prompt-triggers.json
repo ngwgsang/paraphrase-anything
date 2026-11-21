@@ -1,0 +1,23 @@
+{
+  "id": "en-04-prompt-triggers",
+  "lang": "en",
+  "category": "triggers",
+  "prompts": [
+    {
+      "prompt": "Paraphrase this paragraph to make it sound professional",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "Please rewrite this sentence in simpler English",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "Summarize this article into 3 key takeaways",
+      "expected_trigger": false
+    },
+    {
+      "prompt": "Translate this French email to English",
+      "expected_trigger": false
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "en-02-technical-code",
+  "lang": "en",
+  "category": "technical",
+  "mode": "standard",
+  "format": "structured",
+  "input": "Install the client using `pip install paraphrase-everything` and visit https://github.com/ngwgsang/paraphrase-everything for 10 starter examples.",
+  "masked_rewrite": "To get started, install the tool via ⟦P1⟧ and check ⟦P2⟧ to review 10 introductory examples.",
+  "rewrite": "To get started, install the tool via `pip install paraphrase-everything` and check https://github.com/ngwgsang/paraphrase-everything to review 10 introductory examples.",
+  "expected_invariants": {
+    "numbers": ["10"],
+    "code": ["`pip install paraphrase-everything`"],
+    "urls": ["https://github.com/ngwgsang/paraphrase-everything"]
+  },
+  "forbidden": ["summary", "translation"]
+}

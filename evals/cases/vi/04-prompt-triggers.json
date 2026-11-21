@@ -1,0 +1,23 @@
+{
+  "id": "vi-04-prompt-triggers",
+  "lang": "vi",
+  "category": "triggers",
+  "prompts": [
+    {
+      "prompt": "Hãy viết lại đoạn văn này cho tự nhiên và mượt mà hơn",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "Diễn đạt lại câu này theo văn phong học thuật",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "Tóm tắt bài báo này thành 3 gạch đầu dòng ngắn gọn",
+      "expected_trigger": false
+    },
+    {
+      "prompt": "Dịch đoạn văn tiếng Anh này sang tiếng Việt",
+      "expected_trigger": false
+    }
+  ]
+}

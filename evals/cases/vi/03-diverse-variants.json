@@ -1,0 +1,17 @@
+{
+  "id": "vi-03-diverse-variants",
+  "lang": "vi",
+  "category": "variants",
+  "mode": "standard",
+  "format": "raw",
+  "input": "Năm 2024, dự án đã cấp phát 500 suất học bổng cho học sinh nghèo vượt khó tại 12 tỉnh thành.",
+  "variants": [
+    "Học sinh nghèo hiếu học tại 12 tỉnh thành đã được trao tặng 500 suất học bổng từ dự án trong năm 2024.",
+    "Khoản hỗ trợ gồm 500 phần học bổng đã được chương trình phân bổ trong năm 2024 tới 12 địa phương khó khăn.",
+    "Trong năm 2024, mạng lưới 12 tỉnh thành đã tiếp nhận 500 suất học bổng giúp đỡ học sinh có hoàn cảnh neo đơn."
+  ],
+  "expected_invariants": {
+    "numbers": ["2024", "500", "12"]
+  },
+  "forbidden": ["summary", "translation"]
+}

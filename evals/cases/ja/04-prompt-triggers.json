@@ -1,0 +1,23 @@
+{
+  "id": "ja-04-prompt-triggers",
+  "lang": "ja",
+  "category": "triggers",
+  "prompts": [
+    {
+      "prompt": "このメールの文章を丁寧なビジネス敬語に言い換えてください",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "論文の要旨を平易な言葉で書き換えて",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "この長文の要約を箇条書きで3点作成してください",
+      "expected_trigger": false
+    },
+    {
+      "prompt": "以下の英語の契約書を日本語に翻訳してください",
+      "expected_trigger": false
+    }
+  ]
+}

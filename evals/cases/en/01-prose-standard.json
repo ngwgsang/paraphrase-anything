@@ -1,0 +1,13 @@
+{
+  "id": "en-01-prose-standard",
+  "lang": "en",
+  "category": "prose",
+  "mode": "standard",
+  "format": "raw",
+  "input": "In 2024, the renewable energy sector experienced a 25% growth, employing over 3,000 specialists worldwide.",
+  "rewrite": "Worldwide, the renewable energy industry expanded by 25% in 2024, creating jobs for more than 3,000 specialists.",
+  "expected_invariants": {
+    "numbers": ["2024", "25%", "3,000"]
+  },
+  "forbidden": ["summary", "translation"]
+}

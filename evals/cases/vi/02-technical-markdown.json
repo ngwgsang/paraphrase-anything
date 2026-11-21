@@ -1,0 +1,16 @@
+{
+  "id": "vi-02-technical-markdown",
+  "lang": "vi",
+  "category": "technical",
+  "mode": "standard",
+  "format": "structured",
+  "input": "Chạy lệnh `python scripts/pe.py check` để kiểm tra độ chính xác của 5 tài liệu tại https://example.com/docs.",
+  "masked_rewrite": "Để thẩm tra tính chuẩn xác của 5 văn bản tại ⟦P2⟧, hãy thực thi ⟦P1⟧.",
+  "rewrite": "Để thẩm tra tính chuẩn xác của 5 văn bản tại https://example.com/docs, hãy thực thi `python scripts/pe.py check`.",
+  "expected_invariants": {
+    "numbers": ["5"],
+    "code": ["`python scripts/pe.py check`"],
+    "urls": ["https://example.com/docs"]
+  },
+  "forbidden": ["summary", "translation"]
+}

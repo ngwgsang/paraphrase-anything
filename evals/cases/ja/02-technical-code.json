@@ -1,0 +1,16 @@
+{
+  "id": "ja-02-technical-code",
+  "lang": "ja",
+  "category": "technical",
+  "mode": "standard",
+  "format": "structured",
+  "input": "詳細な仕様は https://example.jp/api を参照し、`npm run build` を実行して20個のモジュールを生成してください。",
+  "masked_rewrite": "公式ドキュメント ⟦P1⟧ で仕様を確認の上、⟦P2⟧ により20個の構成モジュールを書き出してください。",
+  "rewrite": "公式ドキュメント https://example.jp/api で仕様を確認の上、`npm run build` により20個の構成モジュールを書き出してください。",
+  "expected_invariants": {
+    "numbers": ["20"],
+    "code": ["`npm run build`"],
+    "urls": ["https://example.jp/api"]
+  },
+  "forbidden": ["summary", "translation"]
+}

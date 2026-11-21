@@ -1,0 +1,13 @@
+{
+  "id": "vi-01-prose-standard",
+  "lang": "vi",
+  "category": "prose",
+  "mode": "standard",
+  "format": "raw",
+  "input": "Vào quý 3 năm 2023, doanh thu của công ty đạt 120 tỷ đồng, tăng trưởng 18% so với cùng kỳ năm trước.",
+  "rewrite": "Doanh thu của doanh nghiệp trong quý 3 năm 2023 ghi nhận 120 tỷ đồng, đạt mức tăng 18% so với cùng kỳ năm ngoái.",
+  "expected_invariants": {
+    "numbers": ["3", "2023", "120", "18%"]
+  },
+  "forbidden": ["summary", "translation"]
+}

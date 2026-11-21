@@ -1,0 +1,19 @@
+{
+  "id": "en-05-false-positive-accept",
+  "lang": "en",
+  "category": "accept_warning",
+  "mode": "standard",
+  "format": "raw",
+  "input": "It is not uncommon for software projects to exceed initial budget estimates by 15%.",
+  "rewrite": "Software projects commonly exceed initial budget estimates by 15%.",
+  "accept": [
+    {
+      "id": "w1",
+      "reason": "double negative rewritten as positive assertion"
+    }
+  ],
+  "expected_invariants": {
+    "numbers": ["15%"]
+  },
+  "forbidden": ["summary", "translation"]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "ja-01-prose-standard",
+  "lang": "ja",
+  "category": "prose",
+  "mode": "standard",
+  "format": "raw",
+  "input": "2024年4月に同社は新製品を発表し、初月で3万台の出荷を記録した。",
+  "rewrite": "同社が2024年4月にリリースした最新製品は、初月時点で3万台の出荷に達した。",
+  "expected_invariants": {
+    "numbers": ["2024", "4", "3"]
+  },
+  "forbidden": ["summary", "translation"]
+}
