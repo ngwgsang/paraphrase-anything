@@ -13,6 +13,7 @@ EXIT_OK, EXIT_ISSUES, EXIT_ERROR = 0, 1, 2
 
 
 def _read_input(args):
+    """Read the single input from --text, stdin ('-'), or a file path."""
     if getattr(args, "text", None) is not None:
         return args.text
     source = args.input
@@ -26,11 +27,13 @@ def _read_input(args):
 
 
 def _write_text(path, text):
+    """Write UTF-8 text to ``path`` without changing line endings."""
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(text)
 
 
 def _emit(result, pretty):
+    """Print ``result`` as JSON, indented when ``pretty`` is set."""
     if pretty:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
@@ -38,11 +41,13 @@ def _emit(result, pretty):
 
 
 def _add_input(p):
+    """Add the standard input path / --text arguments to a subparser."""
     p.add_argument("input", nargs="?", help="input file, or '-' for stdin")
     p.add_argument("--text", help="input text given inline")
 
 
 def cmd_protect(args):
+    """Mask opaque spans; return the masked text and placeholder map."""
     text = _read_input(args)
     try:
         masked, mapping = protect.protect(text, keep=args.keep or ())
@@ -65,6 +70,7 @@ def cmd_protect(args):
 
 
 def cmd_restore(args):
+    """Restore placeholders using a map; report missing or extra ones."""
     text = _read_input(args)
     with open(args.map, encoding="utf-8") as f:
         mapping = json.load(f)
@@ -78,6 +84,7 @@ def cmd_restore(args):
 
 
 def _read_source(source, inline):
+    """Read text from an inline value, stdin ('-'), or a file path."""
     if inline is not None:
         return inline
     if source is None:
@@ -89,6 +96,7 @@ def _read_source(source, inline):
 
 
 def cmd_check(args):
+    """Run the fidelity check between an original and its rewrite."""
     if args.original == "-" and args.rewritten == "-":
         raise SystemExit("error: only one of original/rewritten can be read from stdin")
     original = _read_source(args.original, args.original_text)
@@ -103,6 +111,7 @@ def cmd_check(args):
 
 
 def cmd_metrics(args):
+    """Compute metrics for a pair, or pairwise divergence for variants."""
     if args.pairwise:
         if args.variants_json:
             texts = json.loads(_read_source(args.variants_json, None))
@@ -131,16 +140,19 @@ def cmd_metrics(args):
 
 
 def cmd_detect(args):
+    """Detect the language of the input."""
     code = lang.detect(_read_input(args))
     return {"ok": True, "lang": code, "supported": code in lang.available()}, EXIT_OK
 
 
 def cmd_langs(args):
+    """List installed language data."""
     langs = [{"code": c, "name": lang.load(c)["name"]} for c in lang.available()]
     return {"ok": True, "langs": langs}, EXIT_OK
 
 
 def build_parser():
+    """Build the argparse parser with all subcommands."""
     parser = argparse.ArgumentParser(prog="pe", description="paraphrase-everything tooling")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--pretty", action="store_true", help="indent JSON output")
@@ -192,6 +204,7 @@ def build_parser():
 
 
 def main(argv=None):
+    """CLI entry point: parse arguments, run the command, print JSON, return the exit code."""
     for stream in (sys.stdin, sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")

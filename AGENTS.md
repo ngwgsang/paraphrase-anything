@@ -52,7 +52,11 @@ python skills/paraphrase-anything/scripts/pe.py --help  # CLI help
 - CLI output is JSON on stdout; exit codes: `0` ok, `1` completed with issues, `2` usage or input error.
 - Every input-reading command accepts a path, `-` (stdin), or `--text`.
 - Read and write files as UTF-8 with `newline=""` to preserve line endings.
-- Match the surrounding style: short docstrings, comments only where the reason is not obvious.
+- **Every function, method, and class has a short docstring** describing what it does
+  (one line is usually enough; add details only for non-obvious behaviour). This includes
+  private helpers and nested functions; test methods are exempt because their names describe
+  them. A test enforces this.
+- Match the surrounding style: comments only where the reason is not obvious.
 - Every change ships with tests, including vi / en / ja cases where language matters.
 
 ## Documentation

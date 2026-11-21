@@ -28,6 +28,7 @@ def available():
 
 @lru_cache(maxsize=None)
 def _read(code):
+    """Read and cache one language JSON file."""
     with open(LANG_DIR / f"{code}.json", encoding="utf-8") as f:
         return json.load(f)
 

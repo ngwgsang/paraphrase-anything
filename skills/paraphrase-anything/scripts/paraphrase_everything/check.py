@@ -29,6 +29,7 @@ class Doc:
     """Text analysed once: opaque spans removed, sentences split."""
 
     def __init__(self, raw, data, keep):
+        """Analyse ``raw``: strip opaque spans and citations, then split sentences."""
         self.raw = raw
         spans = find_spans(raw, keep)
         self.opaque = Counter(raw[s:e] for s, e, _ in spans)
@@ -44,6 +45,7 @@ class Doc:
 
 
 def _numbers(text, data):
+    """Count numeric values, normalised with the language's separators."""
     values = Counter()
     for m in NUMBER_RE.finditer(normalize(text)):
         token = m.group(0).replace(data["thousands_separator"], "")
@@ -56,6 +58,7 @@ def _numbers(text, data):
 
 
 def _pretty_number(key):
+    """Format a normalised number key for display (42.0 -> 42)."""
     try:
         f = float(key)
         return str(int(f)) if f.is_integer() else str(f)
@@ -64,6 +67,7 @@ def _pretty_number(key):
 
 
 def _trigrams(s):
+    """Set of lower-cased character trigrams, whitespace collapsed."""
     s = re.sub(r"\s+", " ", normalize(s).lower())
     return {s[i:i + 3] for i in range(max(len(s) - 2, 1))}
 
@@ -93,6 +97,7 @@ def align(a, b):
     unions = {}
 
     def union(tris, side, i, d):
+        """Cached union of trigram sets for ``d`` consecutive sentences from ``i``."""
         if d == 1:
             return tris[i]
         key = (side, i, d)
@@ -101,6 +106,7 @@ def align(a, b):
         return unions[key]
 
     def group_cost(i, j, di, dj):
+        """Cost of aligning sentences a[i:i+di] with b[j:j+dj]."""
         if di == 0 or dj == 0:
             return SKIP_COST
         la, lb = len_a[i + di] - len_a[i], len_b[j + dj] - len_b[j]
@@ -139,6 +145,7 @@ def _snippet(doc, idx):
 
 
 def _counter_diff(kind, before, after, fmt=str):
+    """Report values missing from or extra in ``after`` compared to ``before``."""
     issues = []
     for value, n in (before - after).items():
         issues.append({"type": f"{kind}_missing", "value": fmt(value), "count": n})

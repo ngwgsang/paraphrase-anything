@@ -44,6 +44,7 @@ def markers_pattern(markers, word_bounded):
 
 
 def count(pattern, text):
+    """Number of matches of ``pattern`` in ``text`` (0 when there is no pattern)."""
     return len(pattern.findall(text)) if pattern else 0
 
 
@@ -57,6 +58,7 @@ def split_sentences(text, data):
     spans, start, i, n = [], 0, 0, len(text)
 
     def push(end):
+        """Close the current sentence at ``end``, trimming surrounding whitespace."""
         nonlocal start
         if text[start:end].strip():
             s = start + len(text[start:end]) - len(text[start:end].lstrip())

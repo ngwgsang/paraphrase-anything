@@ -32,6 +32,7 @@ def tokens(text, data):
 
 
 def _ngrams(seq, n):
+    """Count n-grams of a token list or character string."""
     if isinstance(seq, str):  # character n-grams: substrings are cheaper than tuples
         return Counter(seq[i:i + n] for i in range(len(seq) - n + 1))
     return Counter(tuple(seq[i:i + n]) for i in range(len(seq) - n + 1))
@@ -96,6 +97,7 @@ def longest_shared_run(a, b):
     ib = [vocab.setdefault(t, len(vocab) + 1) for t in b]
 
     def shared(k):
+        """Start in ``a`` of a run of length ``k`` also found in ``b``, else None."""
         starts = {}
         for j, h in enumerate(_hashes(ib, k)):
             starts.setdefault(h, j)
@@ -117,6 +119,7 @@ def longest_shared_run(a, b):
 
 
 def _band(value, band):
+    """Place ``value`` relative to a ``[low, high]`` band, or None if no band."""
     if band is None:
         return None
     low, high = band

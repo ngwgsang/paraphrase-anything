@@ -35,7 +35,7 @@ _TRAILING_PUNCT = ".,;:!?"
 
 
 class ProtectError(ValueError):
-    pass
+    """Raised when input cannot be protected safely."""
 
 
 def find_spans(text, keep=()):
@@ -90,6 +90,7 @@ def restore(text, mapping):
     seen = {}
 
     def replace(m):
+        """Swap one placeholder for its original text and count the occurrence."""
         key = f"P{int(m.group(1))}"
         seen[key] = seen.get(key, 0) + 1
         entry = placeholders.get(key)
