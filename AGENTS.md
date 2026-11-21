@@ -11,8 +11,8 @@ spans that must not change, verifies fidelity against the original, and measures
 
 ```
 skills/paraphrase-anything/
-├── SKILL.md                      # skill entry point (planned)
-├── references/                   # modes, personas, languages (planned)
+├── SKILL.md                      # skill entry point and workflow
+├── references/                   # modes.md, preservation.md, languages/<code>.md
 └── scripts/
     ├── pe.py                     # CLI entry: python scripts/pe.py <command>
     └── paraphrase_everything/    # core package
@@ -58,6 +58,8 @@ python skills/paraphrase-anything/scripts/pe.py --help  # CLI help
   them. A test enforces this.
 - Match the surrounding style: comments only where the reason is not obvious.
 - Every change ships with tests, including vi / en / ja cases where language matters.
+- When changing CLI flags or `modes.json`, update `SKILL.md` and `references/`; `tests/test_skill.py` fails on drift.
+- Adding a language requires `references/languages/<code>.md`.
 
 ## Documentation
 
