@@ -1,0 +1,25 @@
+{
+  "name": "paraphrase-anything",
+  "version": "0.0.1",
+  "description": "Paraphrase, rewrite, or produce diverse variants of any text while keeping numbers, code, names, and facts intact.",
+  "author": {
+    "name": "ngwgsang"
+  },
+  "homepage": "https://github.com/ngwgsang/paraphrase-everything",
+  "repository": "https://github.com/ngwgsang/paraphrase-everything",
+  "license": "MIT",
+  "keywords": [
+    "paraphrase",
+    "rewrite",
+    "writing",
+    "nlp",
+    "fidelity",
+    "claude-code"
+  ],
+  "skills": [
+    "./skills/paraphrase-anything"
+  ],
+  "commands": [
+    "./commands/paraphrase.md"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "paraphrase-everything",
+  "description": "Deterministic paraphrase skill for AI agents",
+  "owner": {
+    "name": "ngwgsang"
+  },
+  "plugins": [
+    {
+      "name": "paraphrase-anything",
+      "description": "Paraphrase, rewrite, or produce diverse variants of any text while keeping numbers, code, names, and facts intact.",
+      "version": "0.0.1",
+      "source": "./",
+      "skills": [
+        "./skills/paraphrase-anything"
+      ],
+      "commands": [
+        "./commands/paraphrase.md"
+      ]
+    }
+  ]
+}

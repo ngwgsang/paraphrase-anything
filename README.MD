@@ -10,15 +10,73 @@ LLMs are good at rewriting but unreliable at staying faithful: they drift in mea
 
 ## Installation
 
-🚧 Coming soon.
+### Claude Code Plugin
+In Claude Code, add the marketplace repository and install the plugin:
+
+```bash
+/plugin marketplace add ngwgsang/paraphrase-everything
+/plugin install paraphrase-anything
+```
+
+### Skills CLI
+Or install directly with `skills`:
+
+```bash
+npx skills add ngwgsang/paraphrase-everything
+```
+
+### Zero-Install Requirements
+No package installation (`pip`) is needed. All bundled tools require only **Python ≥ 3.9 standard library**.
+
+---
 
 ## Usage
 
-🚧 Coming soon.
+### In Claude Code / Agent Chat
+
+Ask naturally in English, Vietnamese, or Japanese:
+
+- *"Paraphrase this text in a formal academic tone: [text]"*
+- *"Viết lại đoạn văn sau theo phong cách tự nhiên, súc tích hơn: [văn bản]"*
+- *"この文章をビジネス向けに丁寧に言い換えてください: [文章]"*
+- *"Give me 3 diverse variants of this paragraph, each on a different axis."*
+
+Or use the slash command:
+
+```bash
+/paraphrase [mode] <text or path/to/file>
+```
+
+Available modes: `standard` (default), `light`, `creative`, `shorten`, `expand`.
+
+### CLI Tooling (`pe.py`)
+
+Run deterministic checks and metrics directly from your terminal:
+
+```bash
+# Verify fidelity: checks numbers, citations, protected spans, and logic
+python skills/paraphrase-anything/scripts/pe.py check original.txt rewrite.txt
+
+# Measure overlap divergence and length ratio against advisory bands
+python skills/paraphrase-anything/scripts/pe.py metrics original.txt rewrite.txt --mode standard
+
+# Check divergence across multiple variants
+python skills/paraphrase-anything/scripts/pe.py metrics --pairwise v1.txt v2.txt v3.txt
+
+# Protect code, URLs, LaTeX, and custom terms before rewriting
+python skills/paraphrase-anything/scripts/pe.py protect input.txt -o masked.txt --map map.json
+python skills/paraphrase-anything/scripts/pe.py restore masked-rewrite.txt --map map.json -o final.txt
+```
+
+---
 
 ## Documentation
 
-🚧 Coming soon.
+- [SKILL.md](skills/paraphrase-anything/SKILL.md) — Skill entry point, triggering, and agent workflows.
+- [Modes Guide](skills/paraphrase-anything/references/modes.md) — Advisory divergence and length bands per mode.
+- [Variant Diversity Guide](skills/paraphrase-anything/references/variants.md) — The 5 axes of variation (Structure, Register, Concision, Voice, Vocabulary).
+- [Preservation Rules](skills/paraphrase-anything/references/preservation.md) — Invariants that must never change.
+- Language Notes: [English](skills/paraphrase-anything/references/languages/en.md), [Vietnamese](skills/paraphrase-anything/references/languages/vi.md), [Japanese](skills/paraphrase-anything/references/languages/ja.md).
 
 ## Star History
 
