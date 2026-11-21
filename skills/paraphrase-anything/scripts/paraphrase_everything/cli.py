@@ -112,8 +112,10 @@ def cmd_check(args):
 
 def cmd_metrics(args):
     """Compute metrics for a pair, or pairwise divergence for variants."""
-    if args.pairwise:
-        if args.variants_json:
+    if args.pairwise or getattr(args, "variants", None):
+        if getattr(args, "variants", None):
+            texts = args.variants
+        elif args.variants_json:
             texts = json.loads(_read_source(args.variants_json, None))
         else:
             if args.inputs.count("-") > 1:
@@ -189,6 +191,8 @@ def build_parser():
     p.add_argument("--mode", choices=sorted(metrics.MODES), help="report advisory bands for this mode")
     p.add_argument("--target-ratio", type=float, help="enforced length target, e.g. 0.7 (±10%%)")
     p.add_argument("--pairwise", action="store_true", help="compare every pair of variants")
+    p.add_argument("--variant", action="append", dest="variants", metavar="TEXT",
+                   help="variant text given inline (repeatable)")
     p.add_argument("--variants-json", metavar="PATH", help="JSON list of variant strings ('-' = stdin)")
     p.add_argument("--max-overlap", type=float, default=metrics.MAX_PAIR_OVERLAP,
                    help="pairs above this overlap are too similar (default: %(default)s)")
