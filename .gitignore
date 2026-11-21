@@ -1,2 +1,8 @@
 # Local dev notes (stories, plans) - not committed
 .dev/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
