@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 
-from . import __version__, lang, protect
+from . import __version__, check, lang, protect
 
 EXIT_OK, EXIT_ISSUES, EXIT_ERROR = 0, 1, 2
 
@@ -77,6 +77,31 @@ def cmd_restore(args):
     return report, EXIT_OK if report["ok"] else EXIT_ISSUES
 
 
+def _read_source(source, inline):
+    if inline is not None:
+        return inline
+    if source is None:
+        raise SystemExit("error: provide a path, '-' for stdin, or the matching --*-text option")
+    if source == "-":
+        return sys.stdin.read()
+    with open(source, encoding="utf-8", newline="") as f:
+        return f.read()
+
+
+def cmd_check(args):
+    if args.original == "-" and args.rewritten == "-":
+        raise SystemExit("error: only one of original/rewritten can be read from stdin")
+    original = _read_source(args.original, args.original_text)
+    rewritten = _read_source(args.rewritten, args.rewritten_text)
+    accept = []
+    if args.accept:
+        with open(args.accept, encoding="utf-8") as f:
+            accept = json.load(f)
+    report = check.check(original, rewritten, lang_code=args.lang,
+                         keep=args.keep or (), accept=accept)
+    return report, EXIT_OK if report["ok"] else EXIT_ISSUES
+
+
 def cmd_detect(args):
     code = lang.detect(_read_input(args))
     return {"ok": True, "lang": code, "supported": code in lang.available()}, EXIT_OK
@@ -105,6 +130,16 @@ def build_parser():
     p.add_argument("--map", required=True, help="placeholder map written by protect")
     p.add_argument("-o", "--output", help="write restored text here instead of the JSON result")
     p.set_defaults(func=cmd_restore)
+
+    p = sub.add_parser("check", help="verify a rewrite against the original")
+    p.add_argument("original", nargs="?", help="original file, or '-' for stdin")
+    p.add_argument("rewritten", nargs="?", help="rewritten file, or '-' for stdin")
+    p.add_argument("--original-text", help="original given inline")
+    p.add_argument("--rewritten-text", help="rewrite given inline")
+    p.add_argument("--lang", default="auto", help="language code (default: detect from original)")
+    p.add_argument("--keep", action="append", metavar="TERM", help="term that must survive verbatim (repeatable)")
+    p.add_argument("--accept", help='JSON list of accepted warnings: [{"id": "w1", "reason": "..."}]')
+    p.set_defaults(func=cmd_check)
 
     p = sub.add_parser("detect", help="detect the input language")
     _add_input(p)

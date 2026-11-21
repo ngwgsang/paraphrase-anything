@@ -6,6 +6,7 @@ Code must never hard-code them (story 012, phase 1).
 
 import json
 import re
+from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 
@@ -17,6 +18,7 @@ _CJK = re.compile(r"[぀-ヿ一-鿿]")
 # Letters specific to Vietnamese, plus precomposed tone-marked vowels.
 _VI = re.compile(r"[ăâđêôơưĂÂĐÊÔƠƯẠ-ỹ]")
 _LATIN = re.compile(r"[A-Za-z]")
+_WORD = re.compile(r"[^\W\d_]+")
 
 
 def available():
@@ -54,6 +56,10 @@ def detect(text):
         return DEFAULT  # Han-only text: could be zh or ja; no pack decides yet.
     if _VI.search(text):
         return "vi"
-    if latin:
-        return "en"
-    return DEFAULT
+    if not latin:
+        return DEFAULT
+    # Latin script without distinctive letters: score each pack's common words.
+    words = Counter(_WORD.findall(text.lower()))
+    scores = {code: sum(words[w] for w in load(code)["detect_words"]) for code in available()}
+    best = max(scores, key=lambda c: (scores[c], c == "en"))
+    return best if scores[best] else "en"

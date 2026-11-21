@@ -3,7 +3,16 @@
   "name": "Generic fallback",
   "length_unit": "char",
   "match": "substring",
-  "sentence_terminators": [".", "!", "?", "。", "！", "？"],
+  "has_case": false,
+  "detect_words": [],
+  "sentence_terminators": [
+    ".",
+    "!",
+    "?",
+    "。",
+    "！",
+    "？"
+  ],
   "abbreviations": [],
   "negation_markers": [],
   "hedge_markers": [],

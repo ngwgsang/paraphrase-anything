@@ -7,6 +7,8 @@ readable and are verified by ``check`` instead.
 
 import re
 
+from .text import term_pattern
+
 PLACEHOLDER = "⟦P{}⟧"
 # Tolerate whitespace an LLM may insert inside the brackets.
 PLACEHOLDER_RE = re.compile(r"⟦\s*P\s*(\d+)\s*⟧")
@@ -36,18 +38,12 @@ class ProtectError(ValueError):
     pass
 
 
-def _keep_pattern(term):
-    escaped = re.escape(term)
-    start = r"(?<!\w)" if term[:1].isalnum() or term[:1] == "_" else ""
-    end = r"(?!\w)" if term[-1:].isalnum() or term[-1:] == "_" else ""
-    return re.compile(start + escaped + end)
-
-
-def _find_spans(text, keep):
+def find_spans(text, keep=()):
+    """Return sorted, non-overlapping ``(start, end, type)`` opaque spans."""
     detectors = list(DETECTORS)
     # Longer terms first so "New York City" beats "New York".
     for term in sorted({t for t in keep if t}, key=len, reverse=True):
-        detectors.append(("keep", _keep_pattern(term)))
+        detectors.append(("keep", term_pattern(term)))
 
     taken = []  # (start, end, type)
     for kind, pattern in detectors:
@@ -73,7 +69,7 @@ def protect(text, keep=()):
         raise ProtectError("input already contains placeholder-like text (⟦P<n>⟧)")
 
     parts, placeholders, pos = [], {}, 0
-    for n, (start, end, kind) in enumerate(_find_spans(text, keep), 1):
+    for n, (start, end, kind) in enumerate(find_spans(text, keep), 1):
         key = f"P{n}"
         placeholders[key] = {"type": kind, "text": text[start:end]}
         parts.append(text[pos:start])

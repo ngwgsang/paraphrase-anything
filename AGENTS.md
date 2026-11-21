@@ -16,8 +16,10 @@ skills/paraphrase-anything/
 └── scripts/
     ├── pe.py                     # CLI entry: python scripts/pe.py <command>
     └── paraphrase_everything/    # core package
-        ├── cli.py
-        ├── protect.py
+        ├── cli.py                # argparse CLI, JSON output
+        ├── protect.py            # mask/restore opaque spans
+        ├── check.py              # fidelity check (errors / warnings / accepts)
+        ├── text.py               # sentence splitting, marker matching
         └── lang/                 # <code>.json language data + loader
 tests/                            # unittest suite
 .dev/docs/                        # local-only stories and roadmap (git-ignored)
@@ -26,8 +28,8 @@ tests/                            # unittest suite
 ## Commands
 
 ```bash
-python -m unittest discover -s tests                  # run all tests
-python skills/paraphrase-anything/scripts/pe.py --help # CLI help
+python -m unittest discover -s tests                   # run all tests
+python skills/paraphrase-anything/scripts/pe.py --help  # CLI help
 ```
 
 ## Design principles
