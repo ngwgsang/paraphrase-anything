@@ -1,0 +1,13 @@
+{
+  "code": "default",
+  "name": "Generic fallback",
+  "length_unit": "char",
+  "match": "substring",
+  "sentence_terminators": [".", "!", "?", "。", "！", "？"],
+  "abbreviations": [],
+  "negation_markers": [],
+  "hedge_markers": [],
+  "decimal_separator": ".",
+  "thousands_separator": ",",
+  "cliches": []
+}

@@ -1,0 +1,128 @@
+"""Command-line interface. Output is JSON on stdout unless ``--pretty`` is given.
+
+Exit codes: 0 ok, 1 completed with issues, 2 usage or input error.
+"""
+
+import argparse
+import json
+import sys
+
+from . import __version__, lang, protect
+
+EXIT_OK, EXIT_ISSUES, EXIT_ERROR = 0, 1, 2
+
+
+def _read_input(args):
+    if getattr(args, "text", None) is not None:
+        return args.text
+    source = args.input
+    if source is None:
+        raise SystemExit("error: provide an input path, '-' for stdin, or --text")
+    if source == "-":
+        return sys.stdin.read()
+    # newline="" keeps CRLF/LF exactly as in the file.
+    with open(source, encoding="utf-8", newline="") as f:
+        return f.read()
+
+
+def _write_text(path, text):
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(text)
+
+
+def _emit(result, pretty):
+    if pretty:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(json.dumps(result, ensure_ascii=False))
+
+
+def _add_input(p):
+    p.add_argument("input", nargs="?", help="input file, or '-' for stdin")
+    p.add_argument("--text", help="input text given inline")
+
+
+def cmd_protect(args):
+    text = _read_input(args)
+    try:
+        masked, mapping = protect.protect(text, keep=args.keep or ())
+    except protect.ProtectError as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
+
+    result = {"ok": True, "count": len(mapping["placeholders"])}
+    if args.output:
+        _write_text(args.output, masked)
+        result["output"] = args.output
+    else:
+        result["text"] = masked
+    if args.map:
+        with open(args.map, "w", encoding="utf-8") as f:
+            json.dump(mapping, f, ensure_ascii=False, indent=2)
+        result["map"] = args.map
+    else:
+        result["map"] = mapping
+    return result, EXIT_OK
+
+
+def cmd_restore(args):
+    text = _read_input(args)
+    with open(args.map, encoding="utf-8") as f:
+        mapping = json.load(f)
+    restored, report = protect.restore(text, mapping)
+    if args.output:
+        _write_text(args.output, restored)
+        report["output"] = args.output
+    else:
+        report["text"] = restored
+    return report, EXIT_OK if report["ok"] else EXIT_ISSUES
+
+
+def cmd_detect(args):
+    code = lang.detect(_read_input(args))
+    return {"ok": True, "lang": code, "supported": code in lang.available()}, EXIT_OK
+
+
+def cmd_langs(args):
+    langs = [{"code": c, "name": lang.load(c)["name"]} for c in lang.available()]
+    return {"ok": True, "langs": langs}, EXIT_OK
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(prog="pe", description="paraphrase-everything tooling")
+    parser.add_argument("--version", action="version", version=__version__)
+    parser.add_argument("--pretty", action="store_true", help="indent JSON output")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p = sub.add_parser("protect", help="mask code, URLs, LaTeX, HTML, and kept terms")
+    _add_input(p)
+    p.add_argument("-o", "--output", help="write masked text here instead of the JSON result")
+    p.add_argument("--map", help="write the placeholder map here instead of the JSON result")
+    p.add_argument("--keep", action="append", metavar="TERM", help="extra term to keep verbatim (repeatable)")
+    p.set_defaults(func=cmd_protect)
+
+    p = sub.add_parser("restore", help="put masked spans back and report placeholder issues")
+    _add_input(p)
+    p.add_argument("--map", required=True, help="placeholder map written by protect")
+    p.add_argument("-o", "--output", help="write restored text here instead of the JSON result")
+    p.set_defaults(func=cmd_restore)
+
+    p = sub.add_parser("detect", help="detect the input language")
+    _add_input(p)
+    p.set_defaults(func=cmd_detect)
+
+    p = sub.add_parser("langs", help="list installed language data")
+    p.set_defaults(func=cmd_langs)
+    return parser
+
+
+def main(argv=None):
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+    args = build_parser().parse_args(argv)
+    try:
+        result, code = args.func(args)
+    except OSError as e:
+        result, code = {"ok": False, "error": str(e)}, EXIT_ERROR
+    _emit(result, args.pretty)
+    return code

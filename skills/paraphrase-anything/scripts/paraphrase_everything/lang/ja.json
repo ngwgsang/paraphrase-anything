@@ -1,0 +1,13 @@
+{
+  "code": "ja",
+  "name": "日本語",
+  "length_unit": "char",
+  "match": "substring",
+  "sentence_terminators": ["。", "！", "？", "!", "?"],
+  "abbreviations": [],
+  "negation_markers": ["ない", "なかった", "ません", "ませんでした", "無い", "ず", "ぬ", "まい"],
+  "hedge_markers": ["かもしれない", "かもしれません", "だろう", "でしょう", "と思われる", "と考えられる", "可能性", "らしい", "ようだ", "ようです", "みたい", "おそらく", "約", "ほど"],
+  "decimal_separator": ".",
+  "thousands_separator": ",",
+  "cliches": ["と言っても過言ではない", "重要な役割を果たす", "今日の社会において"]
+}
