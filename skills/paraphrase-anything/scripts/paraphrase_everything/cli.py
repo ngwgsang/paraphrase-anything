@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 
-from . import __version__, check, lang, protect
+from . import __version__, check, lang, metrics, protect
 
 EXIT_OK, EXIT_ISSUES, EXIT_ERROR = 0, 1, 2
 
@@ -102,6 +102,34 @@ def cmd_check(args):
     return report, EXIT_OK if report["ok"] else EXIT_ISSUES
 
 
+def cmd_metrics(args):
+    if args.pairwise:
+        if args.variants_json:
+            texts = json.loads(_read_source(args.variants_json, None))
+        else:
+            if args.inputs.count("-") > 1:
+                raise SystemExit("error: only one input can be read from stdin")
+            texts = [_read_source(p, None) for p in args.inputs]
+        if len(texts) < 2:
+            raise SystemExit("error: --pairwise needs at least two variants")
+        report = metrics.pairwise(texts, lang_code=args.lang, max_overlap=args.max_overlap)
+        return report, EXIT_OK if report["ok"] else EXIT_ISSUES
+
+    paths = args.inputs + [None] * (2 - len(args.inputs))
+    if len(args.inputs) > 2:
+        raise SystemExit("error: metrics compares two texts; use --pairwise for more")
+    if paths.count("-") > 1:
+        raise SystemExit("error: only one input can be read from stdin")
+    original = _read_source(paths[0], args.original_text)
+    rewritten = _read_source(paths[1], args.rewritten_text)
+    try:
+        report = metrics.compare(original, rewritten, lang_code=args.lang, mode=args.mode,
+                                 target_ratio=args.target_ratio)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
+    return report, EXIT_OK if report["ok"] else EXIT_ISSUES
+
+
 def cmd_detect(args):
     code = lang.detect(_read_input(args))
     return {"ok": True, "lang": code, "supported": code in lang.available()}, EXIT_OK
@@ -140,6 +168,19 @@ def build_parser():
     p.add_argument("--keep", action="append", metavar="TERM", help="term that must survive verbatim (repeatable)")
     p.add_argument("--accept", help='JSON list of accepted warnings: [{"id": "w1", "reason": "..."}]')
     p.set_defaults(func=cmd_check)
+
+    p = sub.add_parser("metrics", help="divergence and length metrics (advisory)")
+    p.add_argument("inputs", nargs="*", help="original and rewrite, or variants with --pairwise ('-' = stdin)")
+    p.add_argument("--original-text", help="original given inline")
+    p.add_argument("--rewritten-text", help="rewrite given inline")
+    p.add_argument("--lang", default="auto", help="language code (default: detect)")
+    p.add_argument("--mode", choices=sorted(metrics.MODES), help="report advisory bands for this mode")
+    p.add_argument("--target-ratio", type=float, help="enforced length target, e.g. 0.7 (±10%%)")
+    p.add_argument("--pairwise", action="store_true", help="compare every pair of variants")
+    p.add_argument("--variants-json", metavar="PATH", help="JSON list of variant strings ('-' = stdin)")
+    p.add_argument("--max-overlap", type=float, default=metrics.MAX_PAIR_OVERLAP,
+                   help="pairs above this overlap are too similar (default: %(default)s)")
+    p.set_defaults(func=cmd_metrics)
 
     p = sub.add_parser("detect", help="detect the input language")
     _add_input(p)

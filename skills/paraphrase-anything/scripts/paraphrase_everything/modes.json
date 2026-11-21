@@ -1,0 +1,7 @@
+{
+  "light": {"overlap": [0.45, 0.85], "length_ratio": [0.90, 1.10]},
+  "standard": {"overlap": [0.15, 0.45], "length_ratio": [0.85, 1.15]},
+  "creative": {"overlap": [0.00, 0.20], "length_ratio": [0.70, 1.30]},
+  "shorten": {"overlap": null, "length_ratio": null},
+  "expand": {"overlap": null, "length_ratio": [1.15, 2.00]}
+}
