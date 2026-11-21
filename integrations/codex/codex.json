@@ -1,0 +1,17 @@
+{
+  "name": "paraphrase-anything",
+  "version": "0.1.0",
+  "description": "Paraphrase, rewrite, or produce diverse variants of any text while keeping numbers, code, names, and facts intact.",
+  "author": {
+    "name": "ngwgsang"
+  },
+  "homepage": "https://github.com/ngwgsang/paraphrase-everything",
+  "repository": "https://github.com/ngwgsang/paraphrase-everything",
+  "license": "MIT",
+  "skills": [
+    "../../skills/paraphrase-anything"
+  ],
+  "prompts": [
+    "./prompts/paraphrase.md"
+  ]
+}

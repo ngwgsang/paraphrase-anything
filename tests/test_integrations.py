@@ -4,6 +4,7 @@ Verifies that all tool manifests in the repository share canonical metadata with
 and checks that the integrations convention is properly maintained.
 """
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -79,6 +80,50 @@ class IntegrationsConventionTest(unittest.TestCase):
         self.assertIn("| Tool / Environment |", content)
         self.assertIn("Claude Code", content)
         self.assertIn("Skills CLI", content)
+        self.assertIn("OpenAI Codex CLI", content)
+
+
+class CodexIntegrationTest(unittest.TestCase):
+    """Verify OpenAI Codex CLI adapter packaging and zero-install execution (story 015)."""
+
+    def setUp(self):
+        self.codex_dir = ROOT / "integrations" / "codex"
+        self.manifest_path = self.codex_dir / "codex.json"
+
+    def test_codex_manifest_and_paths(self):
+        self.assertTrue(self.manifest_path.exists(), "missing integrations/codex/codex.json")
+        data = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        canonical = sync_manifests.get_canonical_metadata(ROOT)
+        self.assertEqual(data["name"], canonical["name"])
+        self.assertEqual(data["version"], canonical["version"])
+        self.assertEqual(data["description"], canonical["description"])
+        for rel_skill in data.get("skills", []):
+            skill_dir = (self.codex_dir / rel_skill).resolve()
+            self.assertTrue(skill_dir.exists(), f"Skill directory not found: {skill_dir}")
+            self.assertTrue((skill_dir / "SKILL.md").exists(), f"Missing SKILL.md in {skill_dir}")
+        for rel_prompt in data.get("prompts", []):
+            prompt_file = (self.codex_dir / rel_prompt).resolve()
+            self.assertTrue(prompt_file.exists(), f"Prompt file not found: {prompt_file}")
+
+    def test_codex_readme_and_agents_snippet(self):
+        readme = self.codex_dir / "README.md"
+        self.assertTrue(readme.exists(), "missing integrations/codex/README.md")
+        content = readme.read_text(encoding="utf-8")
+        self.assertIn("AGENTS.md", content)
+        self.assertIn("~/.codex/skills", content)
+        self.assertIn("~/.codex/prompts", content)
+        self.assertIn("/paraphrase", content)
+
+    def test_codex_zero_install_execution(self):
+        pe_script = ROOT / "skills" / "paraphrase-anything" / "scripts" / "pe.py"
+        proc = subprocess.run([
+            sys.executable, str(pe_script), "check",
+            "--original-text", "Codex launches with 5 parameters.",
+            "--rewritten-text", "Codex initializes with 5 parameters."
+        ], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 0)
+        out = json.loads(proc.stdout)
+        self.assertTrue(out["ok"])
 
 
 if __name__ == "__main__":
