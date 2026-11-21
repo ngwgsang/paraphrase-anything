@@ -10,20 +10,15 @@ LLMs are good at rewriting but unreliable at staying faithful: they drift in mea
 
 ## Installation
 
-### Claude Code Plugin
-In Claude Code, add the marketplace repository and install the plugin:
-
-```bash
-/plugin marketplace add ngwgsang/paraphrase-everything
-/plugin install paraphrase-anything
-```
-
-### Skills CLI
-Or install directly with `skills`:
-
-```bash
-npx skills add ngwgsang/paraphrase-everything
-```
+| Tool / Environment | Installation Method | Status |
+|--------------------|---------------------|--------|
+| **Claude Code** | `/plugin marketplace add ngwgsang/paraphrase-everything`<br>`/plugin install paraphrase-anything` | ✅ Available |
+| **Skills CLI** | `npx skills add ngwgsang/paraphrase-everything` | ✅ Available |
+| **Standalone CLI (`pe.py`)** | Direct execution: `python skills/paraphrase-anything/scripts/pe.py <cmd>` | ✅ Available |
+| **OpenAI Codex CLI** | `integrations/codex/` (copy/symlink to `~/.codex/skills`) | 🚧 Planned (015) |
+| **Gemini CLI** | `gemini extensions install ngwgsang/paraphrase-everything` | 🚧 Planned (016) |
+| **Cursor / Windsurf** | `integrations/cursor/` (.cursorrules / .windsurfrules) | 🚧 Planned (017) |
+| **GitHub Copilot** | `integrations/copilot/` (.github/copilot-instructions.md) | 🚧 Planned (018) |
 
 ### Zero-Install Requirements
 No package installation (`pip`) is needed. All bundled tools require only **Python ≥ 3.9 standard library**.
