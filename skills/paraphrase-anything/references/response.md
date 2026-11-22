@@ -4,11 +4,27 @@ Use this layout for every answer after verification. Write all labels in the use
 
 ## Layout
 
-1. **The rewrite**, in the same format as the input.
+1. **The rewrite**, inside a plain-text code block (see below) so the user can copy it.
 2. **What changed**: a table (below).
 3. **Verification**: one line, e.g. "Checked: numbers, citations, links and code unchanged."
    List remaining warnings honestly.
 4. **Follow-ups**: suggested next requests (below).
+
+## The rewrite block
+
+Put the rewritten text, and nothing else, in a fenced block tagged `text`:
+
+````
+```text
+The rewritten text goes here, exactly as the user should paste it.
+```
+````
+
+- No labels, quotes, bold, or commentary inside the block; only the text to copy.
+- Keep the input's own formatting inside the block (Markdown, line breaks, lists), unrendered.
+- If the rewrite itself contains a triple-backtick fence, open and close the block with four
+  backticks instead, so the inner fence does not end it early.
+- Place a one-line heading before the block only when needed (for variants, see below).
 
 ## What changed table
 
@@ -41,8 +57,9 @@ Header labels:
 
 ## Variants
 
-Label each variant with its axis (see [variants](variants.md)) and give each its own small
-table. Close with one verification line covering all variants.
+Label each variant with its axis (see [variants](variants.md)) in a heading, then give each
+variant its own `text` block (so each can be copied alone) followed by its own small table.
+Close with one verification line covering all variants.
 
 ## Follow-ups
 
@@ -57,7 +74,7 @@ copy, in the user's language. Tailor them to the text and the request:
 - Do not suggest the mode already used, translation, or anything that evades plagiarism or
   AI-detection tools. Do not act on the suggestions until the user picks one.
 
-Example (en):
+Example (en), after the rewrite block and table:
 
 > **Want to go further?** Make it about 30% shorter · Give me 3 variants in different tones ·
 > Keep the original wording of the first sentence

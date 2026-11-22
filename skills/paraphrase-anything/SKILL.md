@@ -82,7 +82,8 @@ Stop after **2 fix rounds**. If issues remain, say exactly which ones.
 
 ### 5. Respond
 Follow [response](references/response.md). In short, answer with:
-1. The rewrite (or variants labelled with their axis) in the same format as the input.
+1. The rewrite (each variant labelled with its axis) in a plain-text ```text block, so it can be
+   copied as is. Keep the input's formatting inside the block.
 2. A **What changed** table of verbatim `Original | Rewritten | Change` fragments.
 3. One verification line, e.g. "Checked: numbers, citations, links and code unchanged."
    List any remaining warnings honestly. Do not paste the JSON.

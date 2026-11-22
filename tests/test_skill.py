@@ -81,6 +81,12 @@ class ResponseDocTest(unittest.TestCase):
         self.assertIn("## Follow-ups", self.doc)
         self.assertIn("Quote verbatim", self.doc)
 
+    def test_rewrite_goes_in_plain_text_block(self):
+        self.assertIn("```text", self.skill)
+        self.assertIn("## The rewrite block", self.doc)
+        self.assertRegex(self.doc, r"four\s+backticks")
+        self.assertIn("own `text` block", self.doc)
+
     def test_every_language_has_header_labels(self):
         for code in lang.available():
             self.assertRegex(self.doc, rf"(?m)^\| {code} \|", f"no header labels for {code}")
