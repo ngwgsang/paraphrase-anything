@@ -151,6 +151,19 @@ class VariantsCliTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(out["ok"])
 
+    def test_variant_requires_pairwise(self):
+        proc = subprocess.run([sys.executable, PE, "metrics", "--variant", "a", "--variant", "b"],
+                              capture_output=True, text=True, encoding="utf-8")
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("--variant requires --pairwise", proc.stderr)
+
+    def test_variant_cannot_mix_with_inputs(self):
+        proc = subprocess.run([sys.executable, PE, "metrics", "--pairwise", "--variant", "a",
+                               "--variant", "b", "some.txt"],
+                              capture_output=True, text=True, encoding="utf-8")
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("cannot be combined", proc.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

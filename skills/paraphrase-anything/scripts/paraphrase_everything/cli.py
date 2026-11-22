@@ -112,8 +112,12 @@ def cmd_check(args):
 
 def cmd_metrics(args):
     """Compute metrics for a pair, or pairwise divergence for variants."""
-    if args.pairwise or getattr(args, "variants", None):
-        if getattr(args, "variants", None):
+    if args.variants and not args.pairwise:
+        raise SystemExit("error: --variant requires --pairwise")
+    if args.pairwise:
+        if args.variants and (args.inputs or args.variants_json):
+            raise SystemExit("error: --variant cannot be combined with input files or --variants-json")
+        if args.variants:
             texts = args.variants
         elif args.variants_json:
             texts = json.loads(_read_source(args.variants_json, None))

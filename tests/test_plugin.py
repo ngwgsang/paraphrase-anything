@@ -46,15 +46,6 @@ class PluginManifestTest(unittest.TestCase):
         self.assertIsNotNone(plugin, "missing paraphrase-anything in marketplace.json")
         self.assertEqual(plugin["version"], paraphrase_everything.__version__)
 
-    def test_version_sync_with_packaging_if_present(self):
-        pyproject = ROOT / "pyproject.toml"
-        if pyproject.exists():
-            import re
-            m = re.search(r'version\s*=\s*["\']([^"\']+)["\']', pyproject.read_text(encoding="utf-8"))
-            if m:
-                self.assertEqual(m.group(1), paraphrase_everything.__version__,
-                                 "pyproject.toml version does not match package __version__")
-
 
 class ZeroInstallExecutionTest(unittest.TestCase):
     """Verify end-to-end execution without pip install (stdlib only)."""

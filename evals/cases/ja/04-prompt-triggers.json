@@ -18,6 +18,14 @@
     {
       "prompt": "以下の英語の契約書を日本語に翻訳してください",
       "expected_trigger": false
+    },
+    {
+      "prompt": "この要約を書き換えてください",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "この文章を校正してください",
+      "expected_trigger": false
     }
   ]
 }

@@ -22,7 +22,7 @@ When generating multiple variants of a text, each version must differ in substan
 
 ## Workflow
 
-1. **Assign distinct axes:** For $N$ variants, choose $N$ different primary axes.
+1. **Assign distinct axes:** For N variants, choose N different primary axes.
 2. **Verify fidelity individually:**
    ```bash
    pe check original.txt v1.txt

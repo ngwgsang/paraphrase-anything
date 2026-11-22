@@ -45,6 +45,26 @@ class EvalCasesTest(unittest.TestCase):
                 self.assertIn("rewrite", data, f"missing rewrite in {path}")
 
 
+class TriggerTermsTest(unittest.TestCase):
+    """Verify trigger terms come from SKILL.md and the heuristic handles edge cases."""
+
+    def test_terms_derived_from_skill_description(self):
+        terms = run_evals.skill_trigger_terms()
+        for expected in ("paraphrase", "rewrite", "say this differently", "alternative versions",
+                         "variants", "viết lại", "言い換え"):
+            self.assertIn(expected, terms)
+
+    def test_every_negative_term_is_not_a_positive_term(self):
+        positive = run_evals.skill_trigger_terms()
+        for terms in run_evals.load_negative_terms().values():
+            for term in terms:
+                self.assertFalse(any(p in term for p in positive), term)
+
+    def test_noun_in_prompt_does_not_veto(self):
+        self.assertTrue(run_evals.evaluate_prompt_trigger("Rewrite this summary", "en"))
+        self.assertFalse(run_evals.evaluate_prompt_trigger("Summarize this article", "en"))
+
+
 class EvalRunnerTest(unittest.TestCase):
     """Verify evaluation runner execution and output formatting."""
 
@@ -58,6 +78,12 @@ class EvalRunnerTest(unittest.TestCase):
         for lang_code in ("en", "vi", "ja"):
             self.assertIn(lang_code, report["by_lang"])
             self.assertEqual(report["by_lang"][lang_code]["pass_rate"], 1.0)
+
+    def test_unwritable_report_path_fails(self):
+        proc = subprocess.run([sys.executable, str(RUNNER), "--quiet", "--json", str(CASES_DIR)],
+                              capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("error:", proc.stderr)
 
     def test_eval_runner_cli(self):
         proc = subprocess.run([sys.executable, str(RUNNER)], capture_output=True,

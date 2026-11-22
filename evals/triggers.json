@@ -1,0 +1,7 @@
+{
+  "negative": {
+    "en": ["summarize", "summarise", "translate", "proofread", "fix the grammar"],
+    "vi": ["hãy tóm tắt", "tóm tắt bài", "tóm tắt đoạn", "tóm tắt văn bản", "dịch sang", "dịch thuật", "hiệu đính"],
+    "ja": ["要約して", "要約を作成", "翻訳して", "に翻訳", "校正して"]
+  }
+}

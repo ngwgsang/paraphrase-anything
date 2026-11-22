@@ -18,6 +18,14 @@
     {
       "prompt": "Dịch đoạn văn tiếng Anh này sang tiếng Việt",
       "expected_trigger": false
+    },
+    {
+      "prompt": "Viết lại mô tả dịch vụ này cho hấp dẫn hơn",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "Hiệu đính đoạn văn này giúp tôi",
+      "expected_trigger": false
     }
   ]
 }

@@ -1,11 +1,12 @@
 """Evaluation suite runner for paraphrase-everything (story 011).
 
-Evaluates test cases across languages (en, vi, ja) for fidelity, divergence metrics,
+Evaluates fixed (pre-written) rewrites across languages (en, vi, ja) for fidelity, divergence metrics,
 pairwise diversity, and prompt trigger accuracy. Generates a summary table and a JSON report.
 """
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -16,29 +17,47 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from paraphrase_everything import check, lang, metrics, protect
 
-# Trigger keywords loaded from skill specification
-TRIGGERS = {
-    "en": ["paraphrase", "rewrite", "reword", "rephrase", "restate", "variants"],
-    "vi": ["viết lại", "diễn đạt lại", "paraphrase lại"],
-    "ja": ["言い換え", "書き換え"],
-}
-NON_TRIGGERS = {
-    "en": ["summarize", "summarise", "summary", "translate", "translation"],
-    "vi": ["tóm tắt", "dịch", "dịch thuật"],
-    "ja": ["要約", "翻訳"],
-}
+TRIGGERS_FILE = ROOT / "evals" / "triggers.json"
+SKILL_MD = ROOT / "skills" / "paraphrase-anything" / "SKILL.md"
+POSITIVE_MARKER = "Use when the user asks to "
+POSITIVE_END = ", for pasted"
 
 
-def evaluate_prompt_trigger(prompt_text, lang_code):
-    """Determine whether a prompt triggers the paraphrase skill."""
+def skill_trigger_terms(skill_md=SKILL_MD):
+    """Extract the trigger phrases listed in the SKILL.md description."""
+    text = Path(skill_md).read_text(encoding="utf-8")
+    match = re.search(r"^description: (.*)$", text, re.MULTILINE)
+    description = match.group(1) if match else ""
+    start = description.find(POSITIVE_MARKER)
+    end = description.find(POSITIVE_END, start)
+    if start < 0 or end < 0:
+        raise RuntimeError(f"cannot find trigger phrases in the description of {skill_md}")
+    terms = []
+    for chunk in description[start + len(POSITIVE_MARKER):end].split(","):
+        for part in re.split(r"\s+or\s+", chunk):
+            term = re.sub(r"^(give|and)\s+", "", part.strip().strip('"').strip()).lower()
+            if term:
+                terms.append(term)
+    return terms
+
+
+def load_negative_terms(path=TRIGGERS_FILE):
+    """Load the per-language request phrases that must not trigger the skill."""
+    return json.loads(Path(path).read_text(encoding="utf-8"))["negative"]
+
+
+def evaluate_prompt_trigger(prompt_text, lang_code, positive=None, negative=None):
+    """Decide whether a prompt triggers the skill, using SKILL.md phrases and the negative list.
+
+    Negative entries are request phrases (verbs), not bare nouns, so "rewrite this summary"
+    still triggers while "summarize this article" does not.
+    """
+    positive = skill_trigger_terms() if positive is None else positive
+    negative = load_negative_terms() if negative is None else negative
     lower = prompt_text.lower()
-    for neg in NON_TRIGGERS.get(lang_code, []):
-        if neg in lower:
-            return False
-    for pos in TRIGGERS.get(lang_code, []):
-        if pos in lower:
-            return True
-    return False
+    if any(term in lower for term in negative.get(lang_code, [])):
+        return False
+    return any(term in lower for term in positive)
 
 
 def evaluate_case(case):
@@ -58,9 +77,11 @@ def evaluate_case(case):
 
     if category == "triggers":
         prompts = case.get("prompts", [])
+        positive = skill_trigger_terms()
+        negative = load_negative_terms()
         mismatches = []
         for item in prompts:
-            predicted = evaluate_prompt_trigger(item["prompt"], lang_code)
+            predicted = evaluate_prompt_trigger(item["prompt"], lang_code, positive, negative)
             expected = item["expected_trigger"]
             if predicted != expected:
                 mismatches.append({"prompt": item["prompt"], "expected": expected, "got": predicted})
@@ -198,15 +219,9 @@ def run_evals(cases_dir=None, json_path=None, lang_filter=None, quiet=False):
         "results": results,
     }
 
-    written_json = False
-    if json_path:
-        try:
-            json_path = Path(json_path)
-            json_path.parent.mkdir(parents=True, exist_ok=True)
-            json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-            written_json = True
-        except OSError:
-            pass
+    json_path = Path(json_path)
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if not quiet:
         print(f"\nEVALUATION SUMMARY: {passed} / {total} passed ({pass_rate * 100:.1f}%)")
@@ -214,10 +229,7 @@ def run_evals(cases_dir=None, json_path=None, lang_filter=None, quiet=False):
         print("Language Breakdown:")
         for code, group in sorted(by_lang.items()):
             print(f"  {code}: {group['passed']}/{group['total']} passed ({group['pass_rate'] * 100:.1f}%)")
-        if written_json:
-            print(f"Report written to: {json_path}\n")
-        else:
-            print()
+        print(f"Report written to: {json_path}\n")
 
     return (0 if report["ok"] else 1), report
 
@@ -231,7 +243,12 @@ def main():
     parser.add_argument("--quiet", action="store_true", help="Suppress summary table output")
     args = parser.parse_args()
 
-    exit_code, _ = run_evals(cases_dir=args.cases, json_path=args.json, lang_filter=args.lang, quiet=args.quiet)
+    try:
+        exit_code, _ = run_evals(cases_dir=args.cases, json_path=args.json,
+                                 lang_filter=args.lang, quiet=args.quiet)
+    except (OSError, RuntimeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        sys.exit(2)
     sys.exit(exit_code)
 
 

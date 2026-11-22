@@ -18,6 +18,18 @@
     {
       "prompt": "Translate this French email to English",
       "expected_trigger": false
+    },
+    {
+      "prompt": "Rewrite this summary so it sounds friendlier",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "Say this differently: the meeting is postponed",
+      "expected_trigger": true
+    },
+    {
+      "prompt": "Proofread this paragraph for typos",
+      "expected_trigger": false
     }
   ]
 }

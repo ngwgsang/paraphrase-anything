@@ -57,7 +57,7 @@ Structured or Simple route for each section. Then run `pe check` on the reassemb
    structure (reorder, merge, split), register (more formal or more casual), concision,
    voice (active or passive), vocabulary. Choose axes that fit the mode; see [variants](references/variants.md).
 2. Check every variant on its own with `pe check`.
-3. `pe metrics --pairwise v1.txt v2.txt v3.txt` (or `--variant "v1" --variant "v2"` for raw text).
+3. `pe metrics --pairwise v1.txt v2.txt v3.txt` (or `--pairwise --variant "v1" --variant "v2"` for raw text).
    For each pair in `too_similar`, rewrite the weaker one along a different axis (at most one extra round).
 
 ### 4. Verify and fix
