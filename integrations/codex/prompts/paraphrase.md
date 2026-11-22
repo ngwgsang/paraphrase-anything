@@ -13,25 +13,11 @@ Rewrite text in a chosen style while keeping facts, numbers, code, and links int
 - **mode** (optional): `standard` (default), `light`, `creative`, `shorten`, `expand`.
 - **text or file**: Text to rewrite or path to a `.txt` or `.md` file.
 
-## Workflow
+## Instructions
 
-1. Save the original text as canonical.
-2. Resolve mode, language, and length target.
-3. If code or formatting is present, mask opaque spans first:
-   ```bash
-   pe protect input.txt -o masked.txt --map map.json
-   ```
-4. Rewrite the content in the target style.
-5. If spans were protected, restore them:
-   ```bash
-   pe restore masked-rewrite.txt --map map.json -o rewrite.txt
-   ```
-6. Verify factual fidelity:
-   ```bash
-   pe check original.txt rewrite.txt
-   ```
-7. Check advisory divergence:
-   ```bash
-   pe metrics original.txt rewrite.txt --mode standard
-   ```
-8. Return the rewritten text and a one-line summary of verification results.
+Read and follow the `paraphrase-anything` skill. Its `SKILL.md` is the single source for the
+workflow, modes, and verification steps; do not rely on a remembered copy of it.
+
+`<skill-dir>` is the folder containing `SKILL.md`: `~/.codex/skills/paraphrase-anything` after a
+global install, or `skills/paraphrase-anything` inside this repository. Run the tooling with
+`python <skill-dir>/scripts/pe.py <command>` (use `python3` if `python` is not Python 3).

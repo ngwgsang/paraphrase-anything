@@ -62,6 +62,54 @@ class ManifestDriftTest(unittest.TestCase):
         self.assertIn("OK:", proc.stdout)
 
 
+class SyncManifestsWriteTest(unittest.TestCase):
+    """Verify that --write propagation and TOML handling behave precisely."""
+
+    def _make_repo(self, tmppath, toml=None):
+        """Create a temp repo with a canonical manifest and an optional pyproject.toml."""
+        plugin_dir = tmppath / ".claude-plugin"
+        plugin_dir.mkdir(parents=True)
+        (plugin_dir / "plugin.json").write_text(
+            '{"name": "paraphrase-anything", "version": "1.2.3", "description": "It\'s canonical"}',
+            encoding="utf-8")
+        (plugin_dir / "marketplace.json").write_text(
+            '{"plugins": [{"name": "paraphrase-anything", "version": "0.0.1", "description": "old"},'
+            ' {"name": "other", "version": "9.9.9"}]}', encoding="utf-8")
+        integ = tmppath / "integrations" / "tool"
+        integ.mkdir(parents=True)
+        (integ / "manifest.json").write_text(
+            '{"name": "x", "version": "0.0.2", "description": "old"}', encoding="utf-8")
+        if toml is not None:
+            (tmppath / "pyproject.toml").write_text(toml, encoding="utf-8")
+
+    def test_write_syncs_json_and_leaves_other_plugins(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            self._make_repo(tmppath)
+            updated = sync_manifests.sync_all_manifests(tmppath)
+            self.assertEqual(sorted(updated),
+                             [".claude-plugin/marketplace.json", "integrations/tool/manifest.json"])
+            self.assertEqual(sync_manifests.check_manifest_drift(tmppath), [])
+            market = json.loads((tmppath / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+            self.assertEqual(market["plugins"][1]["version"], "9.9.9")
+
+    def test_toml_only_top_level_keys_and_quotes(self):
+        toml = ('[tool.x]\ntarget-version = "py39"\n\n[project]\nversion = "0.0.3"\n'
+                'description = "old"\n')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            self._make_repo(tmppath, toml)
+            drifts = sync_manifests.check_manifest_drift(tmppath)
+            toml_drifts = [d for d in drifts if d["path"] == "pyproject.toml"]
+            self.assertEqual({d["field"] for d in toml_drifts}, {"version", "description"})
+            sync_manifests.sync_all_manifests(tmppath)
+            text = (tmppath / "pyproject.toml").read_text(encoding="utf-8")
+            self.assertIn('target-version = "py39"', text)
+            self.assertIn('version = "1.2.3"', text)
+            self.assertIn("It's canonical", text)
+            self.assertEqual(sync_manifests.check_manifest_drift(tmppath), [])
+
+
 class IntegrationsConventionTest(unittest.TestCase):
     """Verify conventions for adding tool adapters."""
 
@@ -113,6 +161,13 @@ class CodexIntegrationTest(unittest.TestCase):
         self.assertIn("~/.codex/skills", content)
         self.assertIn("~/.codex/prompts", content)
         self.assertIn("/paraphrase", content)
+
+    def test_codex_prompt_defers_to_skill(self):
+        prompt = (self.codex_dir / "prompts" / "paraphrase.md").read_text(encoding="utf-8")
+        self.assertIn("SKILL.md", prompt)
+        self.assertIn("scripts/pe.py", prompt)
+        self.assertNotIn("\npe ", prompt, "bare `pe` is not an installed command")
+        self.assertNotIn("```", prompt, "workflow steps must live in SKILL.md, not be copied")
 
     def test_codex_zero_install_execution(self):
         pe_script = ROOT / "skills" / "paraphrase-anything" / "scripts" / "pe.py"

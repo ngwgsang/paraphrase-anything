@@ -55,125 +55,115 @@ def find_all_manifests(root=None):
     return sorted(set(manifests))
 
 
+FIELDS = ("version", "description")
+
+
+def _toml_pattern(field):
+    """Regex matching a top-level `field = "value"` line, with the value as group 2."""
+    return re.compile(
+        rf"^(\s*{field}\s*=\s*)(\"(?:[^\"\\]|\\.)*\"|'[^']*')", re.MULTILINE)
+
+
+def _toml_value(raw):
+    """Decode a quoted TOML string literal matched by `_toml_pattern`."""
+    return json.loads(raw) if raw.startswith('"') else raw[1:-1]
+
+
+def _toml_literal(value):
+    """Encode a string as a TOML basic string (JSON escaping is compatible)."""
+    return json.dumps(value, ensure_ascii=False)
+
+
+def _read_fields(path, canonical):
+    """Return {field: value} for version/description declared in a manifest."""
+    text = path.read_text(encoding="utf-8")
+    if path.name == "marketplace.json":
+        for plugin in json.loads(text).get("plugins", []):
+            if plugin.get("name") == canonical["name"]:
+                return {f: plugin[f] for f in FIELDS if f in plugin}
+        return {}
+    if path.suffix == ".json":
+        data = json.loads(text)
+        return {f: data[f] for f in FIELDS if f in data}
+    found = {}
+    for field in FIELDS:
+        match = _toml_pattern(field).search(text)
+        if match:
+            found[field] = _toml_value(match.group(2))
+    return found
+
+
 def check_manifest_drift(root=None):
     """Compare all manifests against canonical metadata; return list of drift records."""
     root_path = Path(root) if root else ROOT
     canonical = get_canonical_metadata(root_path)
     drifts = []
-
     for manifest_path in find_all_manifests(root_path):
         rel_path = manifest_path.relative_to(root_path).as_posix()
-        text = manifest_path.read_text(encoding="utf-8")
-
-        if manifest_path.name == "marketplace.json":
-            data = json.loads(text)
-            for plugin in data.get("plugins", []):
-                if plugin.get("name") == canonical["name"]:
-                    if plugin.get("version") != canonical["version"]:
-                        drifts.append({
-                            "path": rel_path,
-                            "field": "version",
-                            "expected": canonical["version"],
-                            "actual": plugin.get("version"),
-                        })
-                    if plugin.get("description") != canonical["description"]:
-                        drifts.append({
-                            "path": rel_path,
-                            "field": "description",
-                            "expected": canonical["description"],
-                            "actual": plugin.get("description"),
-                        })
-        elif manifest_path.suffix == ".json":
-            data = json.loads(text)
-            if "version" in data and data["version"] != canonical["version"]:
+        for field, actual in _read_fields(manifest_path, canonical).items():
+            if actual != canonical[field]:
                 drifts.append({
                     "path": rel_path,
-                    "field": "version",
-                    "expected": canonical["version"],
-                    "actual": data["version"],
+                    "field": field,
+                    "expected": canonical[field],
+                    "actual": actual,
                 })
-            if "description" in data and data["description"] != canonical["description"]:
-                drifts.append({
-                    "path": rel_path,
-                    "field": "description",
-                    "expected": canonical["description"],
-                    "actual": data["description"],
-                })
-        elif manifest_path.suffix == ".toml":
-            m_ver = re.search(r'version\s*=\s*["\']([^"\']+)["\']', text)
-            if m_ver and m_ver.group(1) != canonical["version"]:
-                drifts.append({
-                    "path": rel_path,
-                    "field": "version",
-                    "expected": canonical["version"],
-                    "actual": m_ver.group(1),
-                })
-            m_desc = re.search(r'description\s*=\s*["\']([^"\']+)["\']', text)
-            if m_desc and m_desc.group(1) != canonical["description"]:
-                drifts.append({
-                    "path": rel_path,
-                    "field": "description",
-                    "expected": canonical["description"],
-                    "actual": m_desc.group(1),
-                })
-
     return drifts
+
+
+def _write_json(path, data):
+    """Write JSON as UTF-8 with a trailing newline, without newline translation."""
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8", newline="")
 
 
 def sync_all_manifests(root=None):
     """Propagate canonical version and description to all tool manifests."""
     root_path = Path(root) if root else ROOT
     canonical = get_canonical_metadata(root_path)
+    canonical_file = root_path / ".claude-plugin" / "plugin.json"
     updated = []
-
     for manifest_path in find_all_manifests(root_path):
-        if manifest_path == CANONICAL_MANIFEST:
+        if manifest_path == canonical_file:
             continue
-        rel_path = manifest_path.relative_to(root_path).as_posix()
         text = manifest_path.read_text(encoding="utf-8")
-
-        if manifest_path.name == "marketplace.json":
+        if manifest_path.suffix == ".json":
             data = json.loads(text)
+            if manifest_path.name == "marketplace.json":
+                targets = [p for p in data.get("plugins", []) if p.get("name") == canonical["name"]]
+            else:
+                targets = [data]
             changed = False
-            for plugin in data.get("plugins", []):
-                if plugin.get("name") == canonical["name"]:
-                    if plugin.get("version") != canonical["version"]:
-                        plugin["version"] = canonical["version"]
-                        changed = True
-                    if plugin.get("description") != canonical["description"]:
-                        plugin["description"] = canonical["description"]
+            for target in targets:
+                for field in FIELDS:
+                    if field in target and target[field] != canonical[field]:
+                        target[field] = canonical[field]
                         changed = True
             if changed:
-                manifest_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-                updated.append(rel_path)
-        elif manifest_path.suffix == ".json":
-            data = json.loads(text)
-            changed = False
-            if "version" in data and data["version"] != canonical["version"]:
-                data["version"] = canonical["version"]
-                changed = True
-            if "description" in data and data["description"] != canonical["description"]:
-                data["description"] = canonical["description"]
-                changed = True
-            if changed:
-                manifest_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-                updated.append(rel_path)
-        elif manifest_path.suffix == ".toml":
-            new_text = re.sub(r'(version\s*=\s*["\'])[^"\']+(["\'])', rf'\g<1>{canonical["version"]}\g<2>', text)
-            new_text = re.sub(r'(description\s*=\s*["\'])[^"\']+(["\'])', rf'\g<1>{canonical["description"]}\g<2>', new_text)
+                _write_json(manifest_path, data)
+                updated.append(manifest_path.relative_to(root_path).as_posix())
+        else:
+            new_text = text
+            for field in FIELDS:
+                literal = _toml_literal(canonical[field])
+                new_text = _toml_pattern(field).sub(
+                    lambda m, lit=literal: m.group(1) + lit, new_text, count=1)
             if new_text != text:
-                manifest_path.write_text(new_text, encoding="utf-8")
-                updated.append(rel_path)
-
+                manifest_path.write_text(new_text, encoding="utf-8", newline="")
+                updated.append(manifest_path.relative_to(root_path).as_posix())
     return updated
 
 
 def main(argv=None):
     """CLI entry point for checking or syncing manifest metadata."""
     parser = argparse.ArgumentParser(description="Synchronize and verify tool manifests metadata")
-    parser.add_argument("--check", action="store_true", default=True, help="Check for metadata drift (default)")
-    parser.add_argument("--write", action="store_true", help="Write canonical metadata to all manifests")
+    parser.add_argument("--check", action="store_true",
+                        help="Check for metadata drift (the default; conflicts with --write)")
+    parser.add_argument("--write", action="store_true",
+                        help="Write canonical metadata to all manifests (default: only check for drift)")
     args = parser.parse_args(argv)
+    if args.check and args.write:
+        parser.error("--check and --write are mutually exclusive")
 
     if args.write:
         updated = sync_all_manifests()

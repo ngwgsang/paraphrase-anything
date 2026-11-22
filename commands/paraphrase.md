@@ -15,24 +15,7 @@ Rewrite text in a chosen style while keeping facts, numbers, code, and links int
 
 ## Instructions
 
-Follow the workflow defined in the `paraphrase-anything` skill:
-1. Save or pin the input text verbatim.
-2. Resolve mode, language, and length target.
-3. If code, URLs, or formatting are present, protect opaque spans first:
-   ```bash
-   pe protect input.txt -o masked.txt --map map.json
-   ```
-4. Rewrite the content in the target style.
-5. If spans were protected, restore them:
-   ```bash
-   pe restore masked-rewrite.txt --map map.json -o rewrite.txt
-   ```
-6. Verify factual fidelity:
-   ```bash
-   pe check original.txt rewrite.txt
-   ```
-7. Check divergence metrics:
-   ```bash
-   pe metrics original.txt rewrite.txt --mode standard
-   ```
-8. Return the rewritten text and a one-line summary of verification results.
+Read and follow the `paraphrase-anything` skill. Its `SKILL.md` is the single source for the
+workflow, modes, and verification steps. Run the tooling with
+`python <skill-dir>/scripts/pe.py <command>`, where `<skill-dir>` is the folder containing `SKILL.md`
+(use `python3` if `python` is not Python 3).
