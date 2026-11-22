@@ -70,6 +70,7 @@ python skills/paraphrase-anything/scripts/pe.py restore masked-rewrite.txt --map
 - [SKILL.md](skills/paraphrase-anything/SKILL.md) — Skill entry point, triggering, and agent workflows.
 - [Modes Guide](skills/paraphrase-anything/references/modes.md) — Advisory divergence and length bands per mode.
 - [Variant Diversity Guide](skills/paraphrase-anything/references/variants.md) — The 5 axes of variation (Structure, Register, Concision, Voice, Vocabulary).
+- [Key Facts](skills/paraphrase-anything/references/facts.md) — Extract a short fact checklist before rewriting and verify the rewrite against it (`pe facts`).
 - [Preservation Rules](skills/paraphrase-anything/references/preservation.md) — Invariants that must never change.
 - Language Notes: [English](skills/paraphrase-anything/references/languages/en.md), [Vietnamese](skills/paraphrase-anything/references/languages/vi.md), [Japanese](skills/paraphrase-anything/references/languages/ja.md).
 

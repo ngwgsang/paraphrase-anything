@@ -22,6 +22,8 @@ passed with `--keep`. They become `⟦Pn⟧` placeholders.
 | Omitted / added sentences | warning | `sentence_unaligned`, `sentence_added` |
 
 ## Also keep (not machine-checked)
+For long or high-stakes text, list the load-bearing ones as key facts and verify them: see [facts](facts.md).
+
 - Direct quotations: copy verbatim inside quotation marks.
 - Defined terms and acronyms: use the same rendering every time.
 - Modality and certainty: "must" ≠ "should" ≠ "may".

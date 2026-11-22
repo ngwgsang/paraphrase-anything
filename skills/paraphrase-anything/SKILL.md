@@ -31,11 +31,17 @@ Save the user's text **verbatim** to a temp file (outside the user's project), e
 | variants | 1 | "give me 3 versions" → variants flow |
 | tone / persona | none | formal, casual, academic, simple; apply within the chosen mode |
 
-Load only what you need: [modes](references/modes.md), [variants](references/variants.md), [preservation rules](references/preservation.md), [response format](references/response.md),
+Load only what you need: [modes](references/modes.md), [variants](references/variants.md), [preservation rules](references/preservation.md), [response format](references/response.md), [key facts](references/facts.md),
 and the language note for the input language: [en](references/languages/en.md),
 [vi](references/languages/vi.md), [ja](references/languages/ja.md).
 
-### 3. Pick a route
+### 3. Extract key facts (long or high-stakes text)
+If the text is over ~150 words, or the user wants strict or exact meaning, list the 3–8 facts
+that must survive (one short claim each, with literal `anchors`) in `facts.json`, then run
+`pe facts original.txt --facts facts.json`. Details and formats: [facts](references/facts.md).
+Skip this step for short text.
+
+### 4. Pick a route
 
 **Simple:** short plain prose (under ~300 words, no code, URLs, math, or HTML).
 1. Rewrite directly.
@@ -60,7 +66,7 @@ Structured or Simple route for each section. Then run `pe check` on the reassemb
 3. `pe metrics --pairwise v1.txt v2.txt v3.txt` (or `--pairwise --variant "v1" --variant "v2"` for raw text).
    For each pair in `too_similar`, rewrite the weaker one along a different axis (at most one extra round).
 
-### 4. Verify and fix
+### 5. Verify and fix
 `pe check` returns `errors`, `warnings`, `unsupported`:
 
 - **Errors** (numbers, citations, protected spans, leftover placeholders) must be fixed. Edit
@@ -73,6 +79,10 @@ Structured or Simple route for each section. Then run `pe check` on the reassemb
     and re-run with `--accept accept.json`.
 - **unsupported** lists checks the language data cannot run; review those aspects yourself.
 
+If you extracted facts, also run `pe facts original.txt rewrite.txt --facts facts.json
+--verdicts verdicts.json`: it checks the anchors and that you judged every fact `kept`,
+`changed`, or `lost`. Fix `changed` and `lost` facts like errors.
+
 Optionally run `pe metrics original.txt rewrite.txt --mode <mode>` for divergence and length.
 Bands are advisory: `above` in standard mode means you stayed close to the original, so rewrite
 more only if the user wanted a real paraphrase. Do not swap words just to move a number.
@@ -80,7 +90,7 @@ For explicit length targets use `--target-ratio 0.7`; that one is enforced (±10
 
 Stop after **2 fix rounds**. If issues remain, say exactly which ones.
 
-### 5. Respond
+### 6. Respond
 Follow [response](references/response.md). In short, answer with:
 1. The rewrite (each variant labelled with its axis) in a plain-text ```text block, so it can be
    copied as is. Keep the input's formatting inside the block.

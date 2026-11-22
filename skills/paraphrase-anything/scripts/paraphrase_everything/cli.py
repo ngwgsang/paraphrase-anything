@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 
-from . import __version__, check, lang, metrics, protect
+from . import __version__, check, facts, lang, metrics, protect
 
 EXIT_OK, EXIT_ISSUES, EXIT_ERROR = 0, 1, 2
 
@@ -110,6 +110,33 @@ def cmd_check(args):
     return report, EXIT_OK if report["ok"] else EXIT_ISSUES
 
 
+def _read_json_file(path):
+    """Load a JSON file given by path, or from stdin when the path is '-'."""
+    if path == "-":
+        return json.loads(sys.stdin.read())
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def cmd_facts(args):
+    """Validate a key-fact list against the original and, given a rewrite, verify it."""
+    if [args.original, args.rewritten, args.facts].count("-") > 1:
+        raise SystemExit("error: only one input can be read from stdin")
+    original = _read_source(args.original, args.original_text)
+    has_rewrite = args.rewritten is not None or args.rewritten_text is not None
+    rewritten = _read_source(args.rewritten, args.rewritten_text) if has_rewrite else None
+    if args.verdicts and rewritten is None:
+        raise SystemExit("error: --verdicts needs a rewrite to judge")
+    try:
+        fact_list = facts.parse_facts(_read_json_file(args.facts))
+        verdicts = facts.parse_verdicts(_read_json_file(args.verdicts)) if args.verdicts else None
+    except (facts.FactsError, json.JSONDecodeError) as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
+    report = facts.verify(original, fact_list, rewritten, verdicts, lang_code=args.lang,
+                          max_facts=args.max_facts)
+    return report, EXIT_OK if report["ok"] else EXIT_ISSUES
+
+
 def cmd_metrics(args):
     """Compute metrics for a pair, or pairwise divergence for variants."""
     if args.variants and not args.pairwise:
@@ -186,6 +213,20 @@ def build_parser():
     p.add_argument("--keep", action="append", metavar="TERM", help="term that must survive verbatim (repeatable)")
     p.add_argument("--accept", help='JSON list of accepted warnings: [{"id": "w1", "reason": "..."}]')
     p.set_defaults(func=cmd_check)
+
+    p = sub.add_parser("facts", help="validate a key-fact list, or verify a rewrite against it")
+    p.add_argument("original", nargs="?", help="original file, or '-' for stdin")
+    p.add_argument("rewritten", nargs="?", help="rewritten file, or '-' for stdin (omit to only validate)")
+    p.add_argument("--original-text", help="original given inline")
+    p.add_argument("--rewritten-text", help="rewrite given inline")
+    p.add_argument("--facts", required=True, metavar="PATH",
+                   help='JSON list of facts: [{"id": "f1", "fact": "...", "anchors": ["42"]}] ("-" = stdin)')
+    p.add_argument("--verdicts", metavar="PATH",
+                   help='JSON list of verdicts: [{"id": "f1", "verdict": "kept|changed|lost", "note": "..."}]')
+    p.add_argument("--lang", default="auto", help="language code (default: detect from original)")
+    p.add_argument("--max-facts", type=int, default=facts.MAX_FACTS,
+                   help="most facts allowed (default: %(default)s)")
+    p.set_defaults(func=cmd_facts)
 
     p = sub.add_parser("metrics", help="divergence and length metrics (advisory)")
     p.add_argument("inputs", nargs="*", help="original and rewrite, or variants with --pairwise ('-' = stdin)")
