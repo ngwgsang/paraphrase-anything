@@ -64,6 +64,28 @@ class SkillMdTest(unittest.TestCase):
         self.assertIn("check", flags)
 
 
+class ResponseDocTest(unittest.TestCase):
+    """Verify the response format (change table and follow-ups) is documented and linked."""
+
+    def setUp(self):
+        self.skill = SKILL_MD.read_text(encoding="utf-8")
+        self.doc = (SKILL_DIR / "references" / "response.md").read_text(encoding="utf-8")
+
+    def test_skill_requires_table_and_follow_ups(self):
+        self.assertIn("references/response.md", self.skill)
+        self.assertIn("What changed", self.skill)
+        self.assertIn("follow-up", self.skill)
+
+    def test_doc_defines_table_and_follow_ups(self):
+        self.assertIn("| Original | Rewritten | Change |", self.doc)
+        self.assertIn("## Follow-ups", self.doc)
+        self.assertIn("Quote verbatim", self.doc)
+
+    def test_every_language_has_header_labels(self):
+        for code in lang.available():
+            self.assertRegex(self.doc, rf"(?m)^\| {code} \|", f"no header labels for {code}")
+
+
 class ModesDocTest(unittest.TestCase):
     def test_bands_match_modes_json(self):
         modes = json.loads((Path(_path.SCRIPTS) / "paraphrase_everything" / "modes.json")

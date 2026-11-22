@@ -31,7 +31,7 @@ Save the user's text **verbatim** to a temp file (outside the user's project), e
 | variants | 1 | "give me 3 versions" → variants flow |
 | tone / persona | none | formal, casual, academic, simple; apply within the chosen mode |
 
-Load only what you need: [modes](references/modes.md), [variants](references/variants.md), [preservation rules](references/preservation.md),
+Load only what you need: [modes](references/modes.md), [variants](references/variants.md), [preservation rules](references/preservation.md), [response format](references/response.md),
 and the language note for the input language: [en](references/languages/en.md),
 [vi](references/languages/vi.md), [ja](references/languages/ja.md).
 
@@ -81,11 +81,15 @@ For explicit length targets use `--target-ratio 0.7`; that one is enforced (±10
 Stop after **2 fix rounds**. If issues remain, say exactly which ones.
 
 ### 5. Respond
-- Give the rewrite (or variants labelled with their axis) in the same format as the input.
-- Do not paste the JSON. Mention verification in one line, e.g. "Checked: numbers, citations,
-  links and code unchanged." List any remaining warnings honestly.
-- If the input is a file, write the result to a new file next to it (e.g. `name.paraphrased.md`)
-  unless the user asked to overwrite.
+Follow [response](references/response.md). In short, answer with:
+1. The rewrite (or variants labelled with their axis) in the same format as the input.
+2. A **What changed** table of verbatim `Original | Rewritten | Change` fragments.
+3. One verification line, e.g. "Checked: numbers, citations, links and code unchanged."
+   List any remaining warnings honestly. Do not paste the JSON.
+4. 2–4 **follow-up suggestions** the user can copy as their next request.
+
+If the input is a file, write the result to a new file next to it (e.g. `name.paraphrased.md`)
+unless the user asked to overwrite; show the table and follow-ups in the chat only.
 
 ## Hard rules
 - Never change facts, numbers, dates, names, quotes, citations, code, or links.
