@@ -8,6 +8,7 @@ import json
 import sys
 
 from . import __version__, check, chunk, facts, glossary, lang, metrics, protect
+from . import io as formats
 
 EXIT_OK, EXIT_ISSUES, EXIT_ERROR = 0, 1, 2
 
@@ -189,6 +190,66 @@ def cmd_glossary(args):
     return result, EXIT_OK
 
 
+def _format_of(args, source):
+    """Resolve the format from ``--format`` or by detecting it from the path and content."""
+    if args.format != "auto":
+        return args.format
+    path = args.input if args.input not in (None, "-") and args.text is None else None
+    return formats.detect(source, path)
+
+
+def cmd_extract(args):
+    """List the rewritable segments of a text, Markdown, SRT, or VTT input."""
+    source = _read_input(args)
+    fmt = _format_of(args, source)
+    segments = formats.public(formats.extract(source, fmt))
+    result = {"ok": True, "format": fmt, "count": len(segments), "segments": segments}
+    if args.output:
+        _write_text(args.output, json.dumps(result, ensure_ascii=False, indent=2))
+        return {"ok": True, "format": fmt, "count": len(segments), "output": args.output}, EXIT_OK
+    return result, EXIT_OK
+
+
+def _rewritten_map(data):
+    """Turn a rewritten-segments JSON value into ``{id: text}``."""
+    items = data.get("segments") if isinstance(data, dict) else data
+    if not isinstance(items, list):
+        raise formats.FormatError("segments JSON must be a list or an object with a 'segments' list")
+    mapping = {}
+    for item in items:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), int)                 or not isinstance(item.get("text"), str):
+            raise formats.FormatError("each segment needs an integer 'id' and a string 'text'")
+        mapping[item["id"]] = item["text"]
+    return mapping
+
+
+def cmd_rebuild(args):
+    """Put rewritten segments back into the original document, keeping everything else."""
+    source = _read_input(args)
+    fmt = _format_of(args, source)
+    try:
+        rewritten = _rewritten_map(_read_json_file(args.segments))
+        before = {s["id"]: s["text"] for s in formats.extract(source, fmt)}
+        output = formats.rebuild(source, fmt, rewritten)
+    except (formats.FormatError, json.JSONDecodeError) as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
+    result = {"ok": True, "format": fmt, "changed": sum(1 for k, v in rewritten.items() if before[k] != v)}
+    if fmt in ("srt", "vtt"):
+        data = lang.load(args.lang if args.lang != "auto" else lang.detect(output))
+        limits = dict(data["subtitle"])
+        if args.max_line_chars is not None:
+            limits["max_line_chars"] = args.max_line_chars
+        if args.max_cps is not None:
+            limits["max_cps"] = args.max_cps
+        result["warnings"] = formats.srt.lint(output, limits)
+    if args.output:
+        _write_text(args.output, output)
+        result["output"] = args.output
+    else:
+        result["text"] = output
+    return result, EXIT_OK
+
+
 def cmd_metrics(args):
     """Compute metrics for a pair, or pairwise divergence for variants."""
     if args.variants and not args.pairwise:
@@ -307,6 +368,25 @@ def build_parser():
     p.add_argument("--rewritten", help="verify mode: rewritten file")
     p.add_argument("--rewritten-text", help="verify mode: rewrite given inline")
     p.set_defaults(func=cmd_glossary)
+
+    p = sub.add_parser("extract", help="list rewritable segments of a text, Markdown, SRT, or VTT file")
+    _add_input(p)
+    p.add_argument("--format", default="auto", choices=["auto", *sorted(formats.FORMATS)],
+                   help="input format (default: detect from extension, then content)")
+    p.add_argument("-o", "--output", help="write the segments JSON here instead of the JSON result")
+    p.set_defaults(func=cmd_extract)
+
+    p = sub.add_parser("rebuild", help="put rewritten segments back into the original document")
+    _add_input(p)
+    p.add_argument("--segments", required=True, metavar="PATH",
+                   help='rewritten segments JSON: [{"id": 1, "text": "..."}] ("-" = stdin)')
+    p.add_argument("--format", default="auto", choices=["auto", *sorted(formats.FORMATS)],
+                   help="input format (default: detect from extension, then content)")
+    p.add_argument("-o", "--output", help="write the rebuilt document here instead of the JSON result")
+    p.add_argument("--lang", default="auto", help="language code for subtitle limits (default: detect)")
+    p.add_argument("--max-line-chars", type=int, help="subtitle line length warning limit (default: per language)")
+    p.add_argument("--max-cps", type=float, help="subtitle reading speed warning limit in chars/second (default: per language)")
+    p.set_defaults(func=cmd_rebuild)
 
     p = sub.add_parser("metrics", help="divergence and length metrics (advisory)")
     p.add_argument("inputs", nargs="*", help="original and rewrite, or variants with --pairwise ('-' = stdin)")

@@ -54,6 +54,16 @@ Skip this step for short text.
 3. `pe restore masked-rewrite.txt --map map.json -o rewrite.txt`. Fix any reported placeholder issue.
 4. `pe check original.txt rewrite.txt [--keep "Term"]`
 
+**Files:** a `.md`, `.srt`, or `.vtt` input, or any document where only the prose should change.
+1. `pe extract notes.md -o segments.json` lists the rewritable segments (`id`, `text`). Code,
+   tables, front matter, HTML, and subtitle indices and timings are never listed.
+2. Rewrite each `text` in `segments.json`, keeping every `id`. Segments that contain inline code
+   or URLs follow the Structured route. For subtitles keep lines short and the meaning per cue.
+3. `pe rebuild notes.md --segments segments.json -o notes.paraphrased.md` puts the texts back and
+   keeps line endings. For `.srt`/`.vtt` it also reports advisory line-length and reading-speed
+   warnings (`--max-line-chars`, `--max-cps` override the per-language defaults).
+4. `pe check notes.md notes.paraphrased.md`.
+
 **Long:** over ~3,000 words (~6,000 characters for Japanese). Process chunks one after another.
 1. If the text has code, URLs, or LaTeX, run `pe protect` first (Structured route).
 2. `pe chunk masked.txt -o chunks/` writes `001.md`, `002.md`, ... and `manifest.json`

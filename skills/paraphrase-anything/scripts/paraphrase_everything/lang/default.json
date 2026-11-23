@@ -18,5 +18,6 @@
   "hedge_markers": [],
   "decimal_separator": ".",
   "thousands_separator": ",",
-  "cliches": []
+  "cliches": [],
+  "subtitle": {"max_line_chars": 42, "max_cps": 17}
 }
