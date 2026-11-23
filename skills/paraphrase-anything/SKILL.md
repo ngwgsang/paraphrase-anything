@@ -29,9 +29,9 @@ Save the user's text **verbatim** to a temp file (outside the user's project), e
 | language | same as input | if the user wants another language, that is translation; ask first |
 | length | about the same | "shorter / 70%" → `shorten` with a target ratio |
 | variants | 1 | "give me 3 versions" → variants flow |
-| tone / persona | none | formal, casual, academic, simple; apply within the chosen mode |
+| tone / persona | none | any file in [personas](references/personas/) (list the folder); apply within the chosen mode |
 
-Load only what you need: [modes](references/modes.md), [variants](references/variants.md), [preservation rules](references/preservation.md), [response format](references/response.md), [key facts](references/facts.md),
+Load only what you need: [modes](references/modes.md), the one persona file requested, [variants](references/variants.md), [preservation rules](references/preservation.md), [response format](references/response.md), [key facts](references/facts.md),
 and the language note for the input language: [en](references/languages/en.md),
 [vi](references/languages/vi.md), [ja](references/languages/ja.md).
 

@@ -39,9 +39,12 @@ swap words just to hit a number. Only `--target-ratio` is enforced.
   when the added sentence restates existing content.
 
 ## Tone on top of a mode
-Tone (formal, casual, academic, simple / plain language) is independent of mode.
-- **formal:** no contractions or slang, precise vocabulary, complete sentences.
-- **casual:** contractions, shorter sentences, conversational connectives.
-- **academic:** hedged where the original hedges, discipline terms kept, impersonal voice.
-- **simple:** short sentences, common words, one idea per sentence; keep technical terms the
-  reader needs and explain them only if the original does.
+Tone is independent of mode. Each tone is a persona pack in `references/personas/<name>.md`
+(`formal`, `casual`, `academic`, `simplify`, `tsundere`, ...): load only the one requested and
+follow its voice rules and examples. The mode still sets how far the structure moves.
+
+A persona may declare `relax: [length, overlap, lint]` in its frontmatter. Those soft signals
+may fall outside the mode's advisory band without a second rewrite round. A persona can never
+relax fidelity errors (numbers, placeholders, links, citations, protected spans) or negation and
+hedge warnings, and `--target-ratio` stays enforced. To add a persona, add one file; see
+[personas/README.md](personas/README.md).
