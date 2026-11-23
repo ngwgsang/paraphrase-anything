@@ -19,7 +19,7 @@ LLMs are good at rewriting but unreliable at staying faithful: they drift in mea
 | **Gemini CLI** | `gemini extensions install https://github.com/ngwgsang/paraphrase-everything` (see `integrations/gemini/`) | ✅ Available |
 | **Cursor** | `integrations/cursor/` (`.cursor/rules/paraphrase.mdc`) | ✅ Available |
 | **Windsurf** | `integrations/windsurf/` (`.windsurf/rules/paraphrase.md`) | ✅ Available |
-| **GitHub Copilot** | `integrations/copilot/` (.github/copilot-instructions.md) | 🚧 Planned (018) |
+| **GitHub Copilot (VS Code)** | `integrations/copilot/` (`.github/prompts/paraphrase.prompt.md`, `.github/instructions/`) | ✅ Available |
 
 ### Zero-Install Requirements
 No package installation (`pip`) is needed. All bundled tools require only **Python ≥ 3.9 standard library**.
