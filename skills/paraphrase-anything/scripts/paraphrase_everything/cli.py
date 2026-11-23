@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 
-from . import __version__, check, facts, lang, metrics, protect
+from . import __version__, check, chunk, facts, glossary, lang, metrics, protect
 
 EXIT_OK, EXIT_ISSUES, EXIT_ERROR = 0, 1, 2
 
@@ -137,6 +137,58 @@ def cmd_facts(args):
     return report, EXIT_OK if report["ok"] else EXIT_ISSUES
 
 
+def cmd_chunk(args):
+    """Split long input into chunk files plus a manifest."""
+    text = _read_input(args)
+    if args.max_words < 1:
+        raise SystemExit("error: --max-words must be at least 1")
+    chunks, info = chunk.split(text, max_words=args.max_words, threshold=args.threshold,
+                               lang_code=args.lang)
+    manifest = chunk.write_chunks(chunks, info, args.output)
+    manifest["output"] = args.output
+    return dict(manifest, ok=True), EXIT_OK
+
+
+def cmd_merge(args):
+    """Reassemble chunk files (or their rewritten copies) in manifest order."""
+    try:
+        text = chunk.merge(args.chunk_dir, args.rewritten_dir)
+    except chunk.ChunkError as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
+    result = {"ok": True, "words": chunk.size(text)}
+    if args.output:
+        _write_text(args.output, text)
+        result["output"] = args.output
+    else:
+        result["text"] = text
+    return result, EXIT_OK
+
+
+def cmd_glossary(args):
+    """Extract a term glossary, or verify a rewrite against a settled glossary."""
+    if args.glossary:
+        if args.rewritten is None and args.rewritten_text is None:
+            raise SystemExit("error: verifying needs a rewrite (--rewritten or --rewritten-text)")
+        original = _read_input(args)
+        rewritten = _read_source(args.rewritten, args.rewritten_text)
+        try:
+            entries = glossary.parse(_read_json_file(args.glossary))
+        except (glossary.GlossaryError, json.JSONDecodeError) as e:
+            return {"ok": False, "error": str(e)}, EXIT_ERROR
+        report = glossary.verify(original, rewritten, entries)
+        return report, EXIT_OK if report["ok"] else EXIT_ISSUES
+    entries = glossary.extract(_read_input(args), keep=args.keep or (), terms=args.term or (),
+                               min_count=args.min_count)
+    result = {"ok": True, "count": len(entries)}
+    if args.output:
+        with open(args.output, "w", encoding="utf-8") as f:
+            json.dump(entries, f, ensure_ascii=False, indent=2)
+        result["output"] = args.output
+    else:
+        result["glossary"] = entries
+    return result, EXIT_OK
+
+
 def cmd_metrics(args):
     """Compute metrics for a pair, or pairwise divergence for variants."""
     if args.variants and not args.pairwise:
@@ -227,6 +279,34 @@ def build_parser():
     p.add_argument("--max-facts", type=int, default=facts.MAX_FACTS,
                    help="most facts allowed (default: %(default)s)")
     p.set_defaults(func=cmd_facts)
+
+    p = sub.add_parser("chunk", help="split long input into chunks for section-by-section rewriting")
+    _add_input(p)
+    p.add_argument("-o", "--output", required=True, metavar="DIR", help="folder for NNN.md files and manifest.json")
+    p.add_argument("--max-words", type=int, default=chunk.DEFAULT_MAX_WORDS,
+                   help="target chunk size in words (default: %(default)s)")
+    p.add_argument("--threshold", type=int, default=chunk.DEFAULT_THRESHOLD,
+                   help="inputs up to this many words stay one chunk (default: %(default)s)")
+    p.add_argument("--lang", default="auto", help="language code (default: detect)")
+    p.set_defaults(func=cmd_chunk)
+
+    p = sub.add_parser("merge", help="reassemble chunk files in order")
+    p.add_argument("chunk_dir", help="folder written by chunk")
+    p.add_argument("--rewritten-dir", metavar="DIR", help="folder with rewritten NNN.md files (default: chunk_dir)")
+    p.add_argument("-o", "--output", help="write the merged text here instead of the JSON result")
+    p.set_defaults(func=cmd_merge)
+
+    p = sub.add_parser("glossary", help="extract recurring terms, or verify a rewrite against a glossary")
+    _add_input(p)
+    p.add_argument("--keep", action="append", metavar="TERM", help="term to keep verbatim (repeatable)")
+    p.add_argument("--term", action="append", metavar="TERM", help="term to render consistently (repeatable)")
+    p.add_argument("--min-count", type=int, default=glossary.MIN_COUNT,
+                   help="fewest occurrences to list a term (default: %(default)s)")
+    p.add_argument("-o", "--output", help="write the glossary JSON here instead of the JSON result")
+    p.add_argument("--glossary", metavar="PATH", help="verify mode: settled glossary JSON ('-' = stdin)")
+    p.add_argument("--rewritten", help="verify mode: rewritten file")
+    p.add_argument("--rewritten-text", help="verify mode: rewrite given inline")
+    p.set_defaults(func=cmd_glossary)
 
     p = sub.add_parser("metrics", help="divergence and length metrics (advisory)")
     p.add_argument("inputs", nargs="*", help="original and rewrite, or variants with --pairwise ('-' = stdin)")

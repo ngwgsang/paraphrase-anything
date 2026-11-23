@@ -54,9 +54,19 @@ Skip this step for short text.
 3. `pe restore masked-rewrite.txt --map map.json -o rewrite.txt`. Fix any reported placeholder issue.
 4. `pe check original.txt rewrite.txt [--keep "Term"]`
 
-**Long:** over ~3,000 words. Until chunking ships, work section by section (split at headings
-or paragraphs), keep a running list of key terms and how you render them, and use the
-Structured or Simple route for each section. Then run `pe check` on the reassembled text.
+**Long:** over ~3,000 words (~6,000 characters for Japanese). Process chunks one after another.
+1. If the text has code, URLs, or LaTeX, run `pe protect` first (Structured route).
+2. `pe chunk masked.txt -o chunks/` writes `001.md`, `002.md`, ... and `manifest.json`
+   (`needs_chunking` is false below the threshold; then use the Simple or Structured route).
+3. `pe glossary masked.txt -o glossary.json [--keep "Term"] [--term "Term"]`. For each entry set
+   `decision` to `keep` or `rewrite-consistently` and give a `rendering` for the latter.
+4. For each chunk in order, rewrite it into `rewritten/NNN.md` (same file name). Give yourself
+   the glossary and the last paragraph of the previous rewritten chunk as read-only context.
+   Never summarise: later chunks get the same care as the first.
+5. `pe merge chunks/ --rewritten-dir rewritten/ -o masked-rewrite.txt`, then `pe restore` if you
+   protected, and `pe check original.txt rewrite.txt`.
+6. `pe glossary masked.txt --glossary glossary.json --rewritten masked-rewrite.txt` reports
+   lost terms and inconsistent renderings. Fix those sentences like check warnings.
 
 **Variants:** N versions requested.
 1. Give each variant a different axis so they differ in substance, not just synonyms:
