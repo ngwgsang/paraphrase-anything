@@ -16,7 +16,7 @@ LLMs are good at rewriting but unreliable at staying faithful: they drift in mea
 | **Skills CLI** | `npx skills add ngwgsang/paraphrase-everything` | ✅ Available |
 | **Standalone CLI (`pe.py`)** | Direct execution: `python skills/paraphrase-anything/scripts/pe.py <cmd>` | ✅ Available |
 | **OpenAI Codex CLI** | `integrations/codex/` (copy/symlink to `~/.codex/skills`) | ✅ Available |
-| **Gemini CLI** | `gemini extensions install ngwgsang/paraphrase-everything` | 🚧 Planned (016) |
+| **Gemini CLI** | `gemini extensions install https://github.com/ngwgsang/paraphrase-everything` (see `integrations/gemini/`) | ✅ Available |
 | **Cursor / Windsurf** | `integrations/cursor/` (.cursorrules / .windsurfrules) | 🚧 Planned (017) |
 | **GitHub Copilot** | `integrations/copilot/` (.github/copilot-instructions.md) | 🚧 Planned (018) |
 

@@ -41,6 +41,11 @@ def find_all_manifests(root=None):
     if marketplace.exists():
         manifests.append(marketplace)
 
+    # Gemini CLI requires its manifest at the repository root
+    gemini = root_path / "gemini-extension.json"
+    if gemini.exists():
+        manifests.append(gemini)
+
     # Tool integrations in integrations/
     integrations_dir = root_path / "integrations"
     if integrations_dir.exists():

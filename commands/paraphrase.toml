@@ -1,0 +1,22 @@
+description = "Paraphrase, rewrite, or produce variants of text or a file"
+prompt = """
+# /paraphrase
+
+Rewrite text in a chosen style while keeping facts, numbers, code, and links intact.
+
+## Usage
+
+`/paraphrase [mode] <text or file>`
+
+- **mode** (optional): `standard` (default), `light`, `creative`, `shorten`, `expand`.
+- **text or file**: Text to rewrite or path to a `.txt` or `.md` file.
+
+## Instructions
+
+Read and follow the `paraphrase-anything` skill. Its `SKILL.md` is the single source for the
+workflow, modes, and verification steps. Run the tooling with
+`python <skill-dir>/scripts/pe.py <command>`, where `<skill-dir>` is the folder containing `SKILL.md`
+(use `python3` if `python` is not Python 3).
+
+User request: {{args}}
+"""

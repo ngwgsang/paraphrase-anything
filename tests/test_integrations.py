@@ -181,5 +181,45 @@ class CodexIntegrationTest(unittest.TestCase):
         self.assertTrue(out["ok"])
 
 
+class GeminiIntegrationTest(unittest.TestCase):
+    """Verify the Gemini CLI extension packaging (story 016)."""
+
+    def setUp(self):
+        self.manifest = json.loads((ROOT / "gemini-extension.json").read_text(encoding="utf-8"))
+
+    def test_manifest_matches_canonical_and_is_covered_by_drift_check(self):
+        canonical = sync_manifests.get_canonical_metadata(ROOT)
+        for field in ("name", "version", "description"):
+            self.assertEqual(self.manifest[field], canonical[field])
+        found = [p.name for p in sync_manifests.find_all_manifests(ROOT)]
+        self.assertIn("gemini-extension.json", found)
+
+    def test_context_file_imports_skill(self):
+        context = ROOT / self.manifest["contextFileName"]
+        self.assertTrue(context.exists(), f"missing {context}")
+        text = context.read_text(encoding="utf-8")
+        self.assertIn("@./skills/paraphrase-anything/SKILL.md", text)
+        self.assertTrue((ROOT / "skills" / "paraphrase-anything" / "SKILL.md").exists())
+
+    def test_command_toml_parity_with_markdown(self):
+        toml = (ROOT / "commands" / "paraphrase.toml").read_text(encoding="utf-8")
+        md = (ROOT / "commands" / "paraphrase.md").read_text(encoding="utf-8")
+        self.assertRegex(toml, r'(?m)^description = ".+"$')
+        self.assertIn("{{args}}", toml)
+        self.assertNotIn('"""', toml.split('prompt = """', 1)[1].rsplit('"""', 1)[0])
+        usage = "`/paraphrase [mode] <text or file>`"
+        self.assertIn(usage, md)
+        self.assertIn(usage, toml)
+        modes_line = next(l for l in md.splitlines() if l.startswith("- **mode**"))
+        self.assertIn(modes_line, toml)
+        for needle in ("SKILL.md", "scripts/pe.py"):
+            self.assertIn(needle, toml)
+
+    def test_readme_documents_install(self):
+        content = (ROOT / "integrations" / "gemini" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("gemini extensions install", content)
+        self.assertIn("/paraphrase", content)
+
+
 if __name__ == "__main__":
     unittest.main()
