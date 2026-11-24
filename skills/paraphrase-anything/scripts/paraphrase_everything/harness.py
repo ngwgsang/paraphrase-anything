@@ -8,7 +8,8 @@ All state lives in ``session.json`` so a session survives process restarts.
 Text passes (story 024) work on a masked copy of the original: protected spans become
 placeholders, every gate restores them before comparing with the original, and the finished
 rewrite is written restored to ``output.txt``. The last text gate also verifies the agent's
-entailment verdicts (story 025).
+entailment verdicts (story 025). Passes and gates are configurable, with presets; a final floor
+check against the original runs in every configuration (story 026).
 """
 
 import hashlib
@@ -27,7 +28,8 @@ OUTPUT_FILE = "output.txt"
 REPORT_FILE = "report.json"
 GATES_DIR = "gates"
 DEFAULT_MAX_ROUNDS = 2
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+PRESETS_FILE = Path(__file__).with_name("presets.json")
 
 # Every pass in pipeline order. ``ops`` are the plan ops a text pass applies; a disabled text
 # pass merges its ops and duties into the next enabled text pass. JSON passes are frozen once
@@ -51,6 +53,8 @@ PASSES = [
 ]
 BY_ID = {p["id"]: p for p in PASSES}
 FINAL_PASS = "style"
+GATES = [p["gate"] for p in PASSES]
+BY_GATE = {p["gate"]: p for p in PASSES}
 STRUCTURE_OPS = set(BY_ID["structure"]["ops"])
 COUNT_CHANGING_OPS = STRUCTURE_OPS | {"shorten", "expand"}
 
@@ -136,9 +140,77 @@ def parse_passes(spec):
     return [p["id"] for p in PASSES if p["id"] in wanted]
 
 
+def parse_gates(spec):
+    """Turn a ``--gates`` value (``1,3,5`` or ``g1,g3``; empty for none) into gate ids in order."""
+    if spec is None:
+        return list(GATES)
+    wanted = set()
+    for token in (t.strip() for t in spec.split(",")):
+        if not token:
+            continue
+        gate = token if token.startswith("g") else f"g{token}"
+        if gate not in BY_GATE:
+            raise HarnessError(f"unknown gate: {token} (choose from 1-{len(GATES)})")
+        wanted.add(gate)
+    return [g for g in GATES if g in wanted]
+
+
+def presets():
+    """The named presets from ``presets.json``."""
+    return json.loads(_read_text(PRESETS_FILE))
+
+
+def resolve(passes, gates):
+    """``(active gates, skipped gates, resolutions)`` for the enabled passes and requested gates.
+
+    Every departure from the request is listed, never applied silently: gates of disabled passes
+    are dropped, the gate of an enabled JSON pass is kept (later passes rely on its artifact),
+    the floor replaces a disabled last gate, and entailment pairs fall back to the aligner
+    without a plan.
+    """
+    active, resolutions = [], []
+    for p in PASSES:
+        gate, wanted = p["gate"], p["gate"] in gates
+        if p["id"] not in passes:
+            if wanted:
+                resolutions.append({"gate": gate, "action": "dropped", "why": f"pass {p['id']} is disabled"})
+        elif wanted:
+            active.append(gate)
+        elif p["kind"] == "json":
+            active.append(gate)
+            resolutions.append({"gate": gate, "action": "kept",
+                                "why": f"later passes rely on {p['artifact']}; disable pass {p['id']} to skip it"})
+    final = BY_ID[passes[-1]]["gate"]
+    if final not in active:
+        resolutions.append({"gate": final, "action": "floor",
+                            "why": "the last gate is disabled; the final floor check still runs"})
+    elif "plan" not in passes:
+        resolutions.append({"check": "entailment", "action": "aligner",
+                            "why": "pass plan is disabled; pairs come from the pe check aligner"})
+    return active, [g for g in GATES if g not in active], resolutions
+
+
+def skipped_checks(state):
+    """Names of the checks this configuration does not run, for the report and response line."""
+    names = []
+    if "analysis" not in state["passes"]:
+        names.append("key facts")
+    if "plan" not in state["passes"]:
+        names.append("plan adherence")
+    for pid in ("structure", "lexis"):
+        if pid in state["passes"] and BY_ID[pid]["gate"] not in state["gates"]:
+            names.append(f"{pid} gate")
+    if BY_ID[state["passes"][-1]]["gate"] not in state["gates"]:
+        names += ["check warnings", "plan adherence", "length target", "entailment"]
+    return list(dict.fromkeys(names))
+
+
 def init(text, session_dir=None, mode="standard", persona=None, lang_code="auto", passes=None,
-         max_rounds=DEFAULT_MAX_ROUNDS):
-    """Create a session for ``text`` and return its state; ``session_dir`` defaults to a temp dir."""
+         max_rounds=DEFAULT_MAX_ROUNDS, gates=None, preset=None):
+    """Create a session for ``text`` and return its state; ``session_dir`` defaults to a temp dir.
+
+    ``passes`` and ``gates`` override the preset's; without a preset everything is enabled.
+    """
     if not text.strip():
         raise HarnessError("input is empty")
     if protect.PLACEHOLDER_RE.search(text):
@@ -149,7 +221,17 @@ def init(text, session_dir=None, mode="standard", persona=None, lang_code="auto"
         raise HarnessError(f"unknown persona {persona!r}; see references/personas/")
     if max_rounds < 0:
         raise HarnessError("--max-rounds must be 0 or more")
+    chosen = {}
+    if preset is not None:
+        if preset not in presets():
+            raise HarnessError(f"unknown preset {preset!r}; choose from {', '.join(presets())}")
+        chosen = presets()[preset]
+    if passes is None and chosen:
+        passes = ",".join(chosen["passes"])
+    if gates is None and chosen:
+        gates = ",".join(chosen["gates"])
     enabled = parse_passes(passes)
+    active, skipped, resolutions = resolve(enabled, parse_gates(gates))
     if session_dir is None:
         session_dir = tempfile.mkdtemp(prefix="pe-")
     session_dir = Path(session_dir)
@@ -165,7 +247,11 @@ def init(text, session_dir=None, mode="standard", persona=None, lang_code="auto"
         "mode": mode,
         "persona": persona,
         "passes": enabled,
-        "gates_skipped": [p["gate"] for p in PASSES if p["id"] not in enabled],
+        "preset": preset,
+        "gates": active,
+        "gates_skipped": skipped,
+        "resolutions": resolutions,
+        "judge": chosen.get("judge", "self"),
         "max_rounds": max_rounds,
         "rounds": {pid: 0 for pid in enabled},
         "current": enabled[0],
@@ -251,6 +337,13 @@ def _drops_done_before(state, pid):
 
 # --- tasks ----------------------------------------------------------------------------------
 
+def _checks(state, pid):
+    """What the gate of ``pid`` runs: ``full``, ``floor`` (disabled last gate), or ``skipped``."""
+    if BY_ID[pid]["gate"] in state["gates"]:
+        return "full"
+    return "floor" if pid == state["passes"][-1] else "skipped"
+
+
 def _references(state, pid):
     """Absolute paths of the reference files this pass needs, and nothing else."""
     names = list(BY_ID[pid]["references"])
@@ -258,7 +351,7 @@ def _references(state, pid):
         names.append(f"languages/{state['lang']}.md")
     if pid == FINAL_PASS and state["persona"]:
         names.append(f"personas/{state['persona']}.md")
-    if pid == state["passes"][-1]:
+    if pid == state["passes"][-1] and _checks(state, pid) == "full":
         names.append("entailment.md")
     return [str(REFERENCES / n) for n in dict.fromkeys(names) if (REFERENCES / n).is_file()]
 
@@ -289,6 +382,7 @@ def next_task(session_dir):
     task = {
         "step": pid,
         "gate": spec["gate"],
+        "checks": _checks(state, pid),
         "pass": f"{state['passes'].index(pid) + 1}/{len(state['passes'])}",
         "inputs": {"original": str(session_dir / ORIGINAL_FILE)},
         "output": str(session_dir / spec["artifact"]),
@@ -331,10 +425,13 @@ def next_task(session_dir):
         task["review_format"] = {"accept": [{"id": "w1", "reason": "why the warning is a false positive"}],
                                  "verdicts": [{"id": "f1", "verdict": "kept", "note": ""}]}
         if pid == state["passes"][-1]:
-            task["review_required"] = (["verdicts: one per fact in state.facts"] if analysis else []) +                 [f"{_nli_name(spec['artifact'])}: both entailment verdicts for every pair"]
+            task["review_required"] = ["verdicts: one per fact in state.facts"] if analysis else []
+        if pid == state["passes"][-1] and task["checks"] == "full":
+            task["review_required"].append(f"{_nli_name(spec['artifact'])}: both entailment verdicts for every pair")
             task["entailment"] = {
                 "file": str(session_dir / _nli_name(spec["artifact"])),
                 "basis": "plan" if plan else "aligner",
+                "judge_recommended": state["judge"],
                 "pairs_command": f"python scripts/pe.py run pairs {session_dir}",
                 "format": {"judge": "self", "pairs": [{
                     "pair": "r1", "forward": "entail", "backward": "entail",
@@ -455,8 +552,12 @@ def _gate_entailment(session_dir, state, pid, original, rewrite, chk):
     return errors, summary
 
 
-def _gate_text(session_dir, state, original, pid):
-    """Gates 3–5: ``pe check`` against the original, plan adherence, sentence count, facts."""
+def _gate_text(session_dir, state, original, pid, floor=False):
+    """Gates 3–5: ``pe check`` against the original, plan adherence, sentence count, facts.
+
+    With ``floor`` only the checks that cannot be disabled run: ``pe check`` errors (numbers,
+    citations, protected spans, placeholders) and, after pass 1, fact anchors and verdicts.
+    """
     artifact = BY_ID[pid]["artifact"]
     try:
         review = _read_review(session_dir, artifact)
@@ -475,6 +576,10 @@ def _gate_text(session_dir, state, original, pid):
     rewrite, issues = restored_text(session_dir, state, pid)
 
     chk = check.check(original, rewrite, lang_code=state["lang"], keep=keep, accept=accept)
+    if floor:
+        issues += chk["errors"]
+        return _with_facts(session_dir, state, original, rewrite, verdicts or {}, issues,
+                           {"accepted": [], "advisory": {"warnings": chk["warnings"]}, "floor": True})
     issues += chk["errors"] + chk["warnings"]
     issues += [_issue("rejected_accept", **r) for r in chk["rejected_accepts"]]
 
@@ -497,10 +602,16 @@ def _gate_text(session_dir, state, original, pid):
     if last:
         nli_issues, result["entailment"] = _gate_entailment(session_dir, state, pid, original, rewrite, chk)
         issues += nli_issues
+    # Anchors are checked at every text gate; verdicts are required at the last one.
+    return _with_facts(session_dir, state, original, rewrite, (verdicts or {}) if last else verdicts,
+                       issues, result)
+
+
+def _with_facts(session_dir, state, original, rewrite, verdicts, issues, result):
+    """Add the frozen fact checks (when pass 1 ran) to a text gate result and finish it."""
+    analysis = frozen_analysis(session_dir, state)
     if analysis:
-        # Anchors are checked at every text gate; verdicts are required at the last one.
-        report = facts.verify(original, analysis["facts"], rewrite, (verdicts or {}) if last else verdicts,
-                              lang_code=state["lang"])
+        report = facts.verify(original, analysis["facts"], rewrite, verdicts, lang_code=state["lang"])
         issues += report["errors"]
         result["advisory"]["facts"] = report["warnings"]
     result.update(ok=not issues, issues=issues)
@@ -514,7 +625,10 @@ def run_gate(session_dir, state, pid):
         return _gate_analysis(session_dir, state, original)
     if pid == "plan":
         return _gate_plan(session_dir, state, original)
-    return _gate_text(session_dir, state, original, pid)
+    checks = _checks(state, pid)
+    if checks == "skipped":
+        return {"ok": True, "issues": [], "skipped": True}
+    return _gate_text(session_dir, state, original, pid, floor=checks == "floor")
 
 
 def submit(session_dir):
@@ -535,6 +649,8 @@ def submit(session_dir):
              "advisory": result.get("advisory", {})}
     if result.get("entailment"):
         entry["entailment"] = result["entailment"]
+    if result.get("skipped") or result.get("floor"):
+        entry["checks"] = "skipped" if result.get("skipped") else "floor"
     _write_json(session_dir / GATES_DIR / f"{spec['gate']}-{pid}-r{entry['round']}.json", entry)
     state["history"].append(entry)
 
@@ -602,7 +718,7 @@ def status(session_dir):
     """Current step, rounds used, and the gate history."""
     state = load(session_dir)
     return {"status": state["status"], "current": state["current"], "passes": state["passes"],
-            "rounds": state["rounds"], "max_rounds": state["max_rounds"],
+            "gates": state["gates"], "resolutions": state["resolutions"], "rounds": state["rounds"], "max_rounds": state["max_rounds"],
             "frozen": [BY_ID[pid]["artifact"] for pid in state["frozen"]],
             "history": [dict({k: e[k] for k in ("pass", "gate", "round", "ok")},
                              invalidated=e.get("invalidated", False)) for e in state["history"]]}
@@ -616,8 +732,12 @@ def build_report(session_dir, state):
         "status": state["status"],
         "lang": state["lang"], "mode": state["mode"], "persona": state["persona"],
         "passes_run": [e["pass"] for e in live if e["ok"]],
-        "gates_run": [{"gate": e["gate"], "pass": e["pass"], "round": e["round"], "ok": e["ok"]} for e in live],
+        "preset": state["preset"],
+        "gates_run": [{"gate": "floor" if e.get("checks") == "floor" else e["gate"], "pass": e["pass"],
+                       "round": e["round"], "ok": e["ok"]} for e in live if e.get("checks") != "skipped"],
         "gates_skipped": state["gates_skipped"],
+        "resolutions": state["resolutions"],
+        "skipped_checks": skipped_checks(state),
         "open_issues": open_issues(state),
         "accepted_warnings": [a for e in live if e["ok"] for a in e["accepted"]],
         "facts_frozen": "analysis" in state["frozen"],

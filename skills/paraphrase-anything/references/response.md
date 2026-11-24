@@ -8,7 +8,8 @@ Use this layout for every answer after verification. Write all labels in the use
 2. **What changed**: a table (below).
 3. **Verification**: one line, e.g. "Checked: numbers, citations, links and code unchanged."
    List remaining warnings honestly. If key facts were used, add "Key facts: N/N kept" and
-   list any fact that is still `changed` or `lost`.
+   list any fact that is still `changed` or `lost`. After a harness session, name the report's
+   `skipped_checks`, e.g. "Skipped: entailment, length target." (see [presets](presets.md)).
 4. **Follow-ups**: suggested next requests (below).
 
 ## The rewrite block

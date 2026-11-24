@@ -17,8 +17,10 @@ python scripts/pe.py run report <session-dir>                # what ran, what wa
 
 `pe run init` options: `--mode`, `--persona` (a file in `references/personas/`), `--lang`
 (default auto), `--passes` (comma list of `analysis`, `plan`, `structure`, `lexis`, `style`;
-default all five), `--max-rounds` (fix rounds per
-pass, default 2), `-o` (session directory; default a new temp directory).
+default all five), `--gates` (comma list of gate numbers, `""` for none; default all),
+`--preset` (`fast`, `standard`, `strict`; see [presets](presets.md)), `--max-rounds` (fix rounds
+per pass, default 2), `-o` (session directory; default a new temp directory). A final floor check
+against the original runs in every configuration; `init` lists any `resolutions` it applied.
 Other commands: `pe run status <session-dir>`, `pe run rewind <session-dir> --to <pass>`, and
 `pe run pairs <session-dir>` (the entailment pairs of the last pass's current rewrite).
 
@@ -27,6 +29,7 @@ Other commands: `pe run status <session-dir>`, `pe run rewind <session-dir> --to
 | Field | Meaning |
 |-------|---------|
 | `step`, `gate`, `pass` | The pass to do, its gate, and its position (e.g. `1/2`). |
+| `checks` | What its gate runs: `full`, `floor` (last gate disabled), or `skipped`. |
 | `inputs.original`, `inputs.previous` | The original, and the text this pass starts from. |
 | `output` | The one file to write. Write nothing else in the session directory. |
 | `instructions` | The only reference files to load for this pass. |
@@ -67,7 +70,7 @@ accepts and verdicts. When facts are frozen, the last text pass must give a verd
 
 Warning ids come from the `issues` of the previous round. Errors cannot be accepted.
 
-The last text pass also needs entailment verdicts (`p5-style.nli.json`): run `pe run pairs`
+When its gate runs in full, the last text pass also needs entailment verdicts (`p5-style.nli.json`): run `pe run pairs`
 after writing the rewrite and judge every pair in both directions, as in
 [entailment](entailment.md). The report's `entailment` field records the pair basis, the count,
 and the claimed `judge`.

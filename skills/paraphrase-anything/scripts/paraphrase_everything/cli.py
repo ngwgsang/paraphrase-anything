@@ -299,8 +299,10 @@ def cmd_langs(args):
     return {"ok": ok, "langs": langs}, EXIT_OK if ok else EXIT_ISSUES
 
 
-RUN_FLAGS = {"init": {"mode", "persona", "lang", "passes", "max_rounds", "output"}, "rewind": {"to"}}
-RUN_DEFAULTS = {"mode": None, "persona": None, "lang": "auto", "passes": None, "max_rounds": None,
+RUN_FLAGS = {"init": {"mode", "persona", "lang", "passes", "gates", "preset", "max_rounds", "output"},
+             "rewind": {"to"}}
+RUN_DEFAULTS = {"mode": None, "persona": None, "lang": "auto", "passes": None, "gates": None, "preset": None,
+                "max_rounds": None,
                 "output": None, "to": None}
 
 
@@ -315,8 +317,10 @@ def cmd_run(args):
             text = _read_input(argparse.Namespace(input=args.target, text=None))
             max_rounds = harness.DEFAULT_MAX_ROUNDS if args.max_rounds is None else args.max_rounds
             state = harness.init(text, args.output, mode=args.mode or "standard", persona=args.persona,
-                                 lang_code=args.lang, passes=args.passes, max_rounds=max_rounds)
+                                 lang_code=args.lang, passes=args.passes, max_rounds=max_rounds,
+                                 gates=args.gates, preset=args.preset)
             return {"ok": True, "session": state["session_dir"], "passes": state["passes"],
+                    "gates": state["gates"], "resolutions": state["resolutions"],
                     "lang": state["lang"], "current": state["current"]}, EXIT_OK
         if args.action == "next":
             task = harness.next_task(args.target)
@@ -474,6 +478,9 @@ def build_parser():
     p.add_argument("--persona", help="init: persona pack name from references/personas/")
     p.add_argument("--lang", default="auto", help="init: language code (default: auto-detect)")
     p.add_argument("--passes", help="init: comma-separated passes to enable (default: all available)")
+    p.add_argument("--gates", help="init: comma-separated gates to run, e.g. 1,3,5 ('' for none; "
+                   "the final floor check always runs)")
+    p.add_argument("--preset", help="init: fast, standard, or strict (from presets.json)")
     p.add_argument("--max-rounds", type=int, help=f"init: fix rounds per pass (default: {harness.DEFAULT_MAX_ROUNDS})")
     p.add_argument("--to", help="rewind: the pass to resume from")
     p.set_defaults(func=cmd_run)

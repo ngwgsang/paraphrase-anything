@@ -1,0 +1,6 @@
+{
+  "fast": {"passes": ["style"], "gates": [], "judge": "self"},
+  "standard": {"passes": ["plan", "lexis", "style"], "gates": ["g2", "g4", "g5"], "judge": "self"},
+  "strict": {"passes": ["analysis", "plan", "structure", "lexis", "style"],
+             "gates": ["g1", "g2", "g3", "g4", "g5"], "judge": "independent"}
+}

@@ -24,6 +24,7 @@ skills/paraphrase-anything/
         ├── planning.py           # analysis/plan validators, plan adherence
         ├── entailment.py         # entailment pairs and verdict checks (last text gate)
         ├── modes.json            # advisory bands per mode
+        ├── presets.json          # harness presets: passes, gates, judge (references/presets.md)
         ├── text.py               # sentence splitting, marker matching
         └── lang/                 # <code>.json language data, loader, pack contract (pack.py)
 tests/                            # unittest suite
