@@ -76,8 +76,32 @@ python skills/paraphrase-anything/scripts/pe.py --help  # CLI help
 1. Pick the next story from the roadmap in `.dev/docs/README.md`.
 2. Implement it with tests; run the full test suite until it passes.
 3. Update the story status and decision log.
-4. **Stop and ask the maintainer whether to commit and push** before starting the next story.
+4. If that story completes a milestone, bump the version (see **Versioning**).
+5. **Stop and ask the maintainer whether to commit and push** before starting the next story.
    Never commit, push, or begin another story without that confirmation.
+
+## Versioning
+
+Semantic versioning; while below 1.0 each roadmap milestone is a minor release:
+
+| Milestone | Version |
+|-----------|---------|
+| MVP | 0.1.0 |
+| v0.2 | 0.2.0 |
+| v0.3 | 0.3.0 |
+| v0.4 | 0.4.0 |
+
+- **Minor bump** when the last story of a milestone is done (every story listed for it in
+  `.dev/docs/README.md` is done or explicitly deferred). Never bump for a partly done milestone.
+- **Patch bump** (`0.3.0` → `0.3.1`) only for fixes released between milestones, when the
+  maintainer asks for one.
+- How: set `version` in `.claude-plugin/plugin.json` (the single source) and `__version__` in
+  `paraphrase_everything/__init__.py`, run `python scripts/sync_manifests.py --write`, then
+  `python scripts/sync_manifests.py --check` and the full test suite (`tests/test_plugin.py`
+  fails on drift).
+- Commit the bump on its own: `Release 0.3.0 (milestone v0.3)`, and record it in the decision log.
+- Git tags (`v0.3.0`) and GitHub releases are outward-facing: create them only when the
+  maintainer asks.
 
 ## Commits and pull requests
 
