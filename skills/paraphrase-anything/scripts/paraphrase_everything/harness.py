@@ -11,7 +11,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from . import check, facts, lang, metrics, protect
+from . import check, facts, lang, metrics, planning, protect
 
 SKILL_DIR = Path(__file__).resolve().parents[2]
 REFERENCES = SKILL_DIR / "references"
@@ -27,10 +27,10 @@ SCHEMA_VERSION = 1
 # next enabled text pass, which the task payload lists under ``duties``.
 PASSES = [
     {"id": "analysis", "gate": "g1", "artifact": "analysis.json", "kind": "json", "available": True,
-     "references": ["facts.md"],
-     "duties": ["list the key facts that must survive, with literal anchors from the original"]},
-    {"id": "plan", "gate": "g2", "artifact": "plan.json", "kind": "json", "available": False,
-     "references": [], "duties": ["plan the change for every original sentence"]},
+     "references": ["analysis.md", "facts.md"],
+     "duties": ["list the key facts, constraints, discourse relations, and register of the original"]},
+    {"id": "plan", "gate": "g2", "artifact": "plan.json", "kind": "json", "available": True,
+     "references": ["plan.md", "modes.md"], "duties": ["plan the change for every original sentence"]},
     {"id": "structure", "gate": "g3", "artifact": "p3-structure.txt", "kind": "text", "available": False,
      "references": [], "duties": ["change sentence structure: split, merge, reorder"]},
     {"id": "lexis", "gate": "g4", "artifact": "p4-lexis.txt", "kind": "text", "available": False,
@@ -194,6 +194,19 @@ def _references(state, pid):
     return [str(REFERENCES / n) for n in names if (REFERENCES / n).is_file()]
 
 
+def frozen_analysis(session_dir, state):
+    """The frozen ``analysis.json`` content, or None before gate 1 passed (or without pass 1)."""
+    if not state["frozen"]:
+        return None
+    return json.loads(_read_text(Path(session_dir) / state["frozen"]["artifact"]))
+
+
+def _constraints(analysis):
+    """``(keep terms, length ratio)`` from the frozen analysis."""
+    constraints = (analysis or {}).get("constraints", {})
+    return tuple(constraints.get("keep", ())), constraints.get("length_ratio")
+
+
 def _last_issues(state, pid):
     """Open issues from the latest gate result of ``pid`` (empty when it has not failed)."""
     for entry in reversed(state["history"]):
@@ -213,6 +226,8 @@ def next_task(session_dir):
     pid = state["current"]
     spec = BY_ID[pid]
     original = _read_text(session_dir / ORIGINAL_FILE)
+    analysis = frozen_analysis(session_dir, state)
+    keep, ratio = _constraints(analysis)
     duties, merged = _duties(state, pid)
     task = {
         "step": pid,
@@ -226,7 +241,8 @@ def next_task(session_dir):
         "merged_passes": merged,
         "constraints": {
             "lang": state["lang"], "mode": state["mode"], "persona": state["persona"],
-            "protected": sorted({original[s:e] for s, e, _ in protect.find_spans(original)}),
+            "protected": sorted({original[s:e] for s, e, _ in protect.find_spans(original, keep)}),
+            "length_ratio": ratio,
         },
         "round": state["rounds"][pid],
         "max_rounds": state["max_rounds"],
@@ -236,12 +252,19 @@ def next_task(session_dir):
         task["review"] = str(session_dir / _review_name(spec["artifact"]))
         task["review_format"] = {"accept": [{"id": "w1", "reason": "why the warning is a false positive"}],
                                  "verdicts": [{"id": "f1", "verdict": "kept", "note": ""}]}
+    if spec["kind"] == "json":
+        task["sentences"] = planning.sentences(original, state["lang"], keep)
     if pid == "analysis":
-        task["output_format"] = {"facts": [{"id": "f1", "fact": "short claim", "anchors": ["42"]}]}
-    if state["frozen"] and spec["kind"] == "text" and pid == state["passes"][-1]:
+        task["output_format"] = {"facts": [{"id": "f1", "fact": "short claim", "anchors": ["42"]}],
+                                 "constraints": {"keep": [], "length_ratio": None},
+                                 "discourse": [{"from": 1, "to": 2, "type": "cause"}],
+                                 "register": "neutral"}
+    if pid == "plan":
+        task["output_format"] = {"rows": [{"src": [1], "ops": ["lexical"], "target": 1}], "axis": None}
+    if analysis and spec["kind"] == "text" and pid == state["passes"][-1]:
         task["review_required"] = ["verdicts: one per fact in state.facts"]
-    if state["frozen"]:
-        task["state"] ={"facts": json.loads(_read_text(session_dir / state["frozen"]["artifact"]))["facts"]}
+    if analysis:
+        task["state"] = {"facts": analysis["facts"], "analysis": analysis}
     return task
 
 
@@ -252,17 +275,31 @@ def _issue(kind, **fields):
     return dict(fields, type=kind)
 
 
-def _gate_analysis(session_dir, state, original):
-    """Gate 1: the analysis is valid JSON with a short fact list grounded in the original."""
+def _read_json_artifact(session_dir, pid):
+    """Parse the JSON artifact of ``pid``; return ``(data, None)`` or ``(None, issue)``."""
     try:
-        data = json.loads(_read_text(Path(session_dir) / BY_ID["analysis"]["artifact"]))
-        if not isinstance(data, dict):
-            raise facts.FactsError("analysis.json must be an object with a 'facts' list")
-        fact_list = facts.parse_facts(data.get("facts"))
-    except (json.JSONDecodeError, facts.FactsError) as e:
-        return {"ok": False, "issues": [_issue("invalid_artifact", error=str(e))], "advisory": {}}
-    report = facts.verify(original, fact_list, lang_code=state["lang"])
-    return {"ok": report["ok"], "issues": report["errors"], "advisory": {"facts": report["warnings"]}}
+        return json.loads(_read_text(Path(session_dir) / BY_ID[pid]["artifact"])), None
+    except json.JSONDecodeError as e:
+        return None, _issue("invalid_artifact", error=f"{BY_ID[pid]['artifact']} is not valid JSON: {e}")
+
+
+def _gate_analysis(session_dir, state, original):
+    """Gate 1: facts grounded in the original; valid constraints, discourse ids, and register."""
+    data, problem = _read_json_artifact(session_dir, "analysis")
+    if problem:
+        return {"ok": False, "issues": [problem], "advisory": {}}
+    errors, warnings = planning.validate_analysis(data, original, state["lang"])
+    return {"ok": not errors, "issues": errors, "advisory": {"warnings": warnings}}
+
+
+def _gate_plan(session_dir, state, original):
+    """Gate 2: every sentence covered exactly once with known ops and consistent targets."""
+    data, problem = _read_json_artifact(session_dir, "plan")
+    if problem:
+        return {"ok": False, "issues": [problem], "advisory": {}}
+    errors, warnings = planning.validate_plan(data, original, state["lang"], state["mode"],
+                                              frozen_analysis(session_dir, state))
+    return {"ok": not errors, "issues": errors, "advisory": {"warnings": warnings}}
 
 
 def _read_review(session_dir, artifact):
@@ -292,18 +329,22 @@ def _gate_text(session_dir, state, original, pid):
     except facts.FactsError as e:
         return {"ok": False, "issues": [_issue("invalid_review", error=str(e))], "advisory": {}}
 
-    chk = check.check(original, rewrite, lang_code=state["lang"], accept=accept)
+    analysis = frozen_analysis(session_dir, state)
+    keep, ratio = _constraints(analysis)
+    last = pid == state["passes"][-1]
+    chk = check.check(original, rewrite, lang_code=state["lang"], keep=keep, accept=accept)
     issues = chk["errors"] + chk["warnings"]
     issues += [_issue("rejected_accept", **r) for r in chk["rejected_accepts"]]
+    # An explicit length target is enforced at the last text gate; bands stay advisory.
+    cmp = metrics.compare(original, rewrite, lang_code=state["lang"], mode=state["mode"],
+                          target_ratio=ratio if last else None)
+    if not cmp["ok"]:
+        issues.append(_issue("length_target", **cmp["target"], length_ratio=cmp["length_ratio"]))
     result = {"accepted": chk["accepted"],
-              "advisory": {"metrics": metrics.compare(original, rewrite, lang_code=state["lang"],
-                                                      mode=state["mode"]),
-                           "unsupported": chk["unsupported"]}}
-    if state["frozen"]:
-        fact_list = json.loads(_read_text(Path(session_dir) / state["frozen"]["artifact"]))["facts"]
-        last = pid == state["passes"][-1]
+              "advisory": {"metrics": cmp, "unsupported": chk["unsupported"]}}
+    if analysis:
         # Anchors are checked at every text gate; verdicts are required at the last one.
-        report = facts.verify(original, fact_list, rewrite, (verdicts or {}) if last else verdicts,
+        report = facts.verify(original, analysis["facts"], rewrite, (verdicts or {}) if last else verdicts,
                               lang_code=state["lang"])
         issues += report["errors"]
         result["advisory"]["facts"] = report["warnings"]
@@ -316,6 +357,8 @@ def run_gate(session_dir, state, pid):
     original = _read_text(Path(session_dir) / ORIGINAL_FILE)
     if pid == "analysis":
         return _gate_analysis(session_dir, state, original)
+    if pid == "plan":
+        return _gate_plan(session_dir, state, original)
     return _gate_text(session_dir, state, original, pid)
 
 

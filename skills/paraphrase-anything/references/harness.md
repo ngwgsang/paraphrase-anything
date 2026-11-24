@@ -28,17 +28,22 @@ Other commands: `pe run status <session-dir>` and `pe run rewind <session-dir> -
 | `output` | The one file to write. Write nothing else in the session directory. |
 | `instructions` | The only reference files to load for this pass. |
 | `duties`, `merged_passes` | What this pass is responsible for, including duties of disabled passes. |
-| `constraints` | Language, mode, persona, and `protected` spans to keep verbatim. |
-| `state.facts` | The frozen key facts (after pass 1). Every later gate re-checks them. |
+| `constraints` | Language, mode, persona, `protected` spans to keep verbatim, and `length_ratio`. |
+| `sentences` | The original's sentences with ids (JSON passes only). |
+| `state.facts`, `state.analysis` | The frozen analysis (after pass 1). Every later gate re-checks the facts. |
 | `round`, `max_rounds`, `issues` | Fix round, limit, and what the last failed gate found. |
 | `review`, `review_required` | Optional review file for text passes; required items are listed. |
 
 ## Passes available now
 
-- **analysis** (gate 1): write `analysis.json` as `{"facts": [...]}` in the format of
-  [key facts](facts.md). The gate checks the limits and that every anchor occurs in the original.
-  Once it passes, the file is **frozen**: editing it makes every command exit 2. To change the
-  facts, run `pe run rewind <session-dir> --to analysis`, which discards every later artifact.
+- **analysis** (gate 1): write `analysis.json` (facts, constraints, discourse, register) as in
+  [analysis](analysis.md); the task lists the original's `sentences` with ids. Once gate 1
+  passes the file is **frozen**: editing it makes every command exit 2. To change it, run
+  `pe run rewind <session-dir> --to analysis`, which discards every later artifact.
+  `constraints.keep` terms become protected spans and `constraints.length_ratio` is enforced at
+  the last gate.
+- **plan** (gate 2): write `plan.json`, one row per output unit covering every sentence once, as
+  in [plan](plan.md).
 - **style** (gate 5): write the finished rewrite to `p5-style.txt`. The gate runs `pe check`
   against the original and, when facts are frozen, checks every anchor and requires a verdict
   per fact. Put accepts and verdicts in `p5-style.review.json`:

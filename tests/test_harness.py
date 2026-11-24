@@ -39,7 +39,8 @@ class SessionTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def start(self, code="en", **kwargs):
-        """Init a session for the language case ``code``."""
+        """Init a session for the language case ``code`` (analysis and style unless given)."""
+        kwargs.setdefault("passes", "analysis,style")
         harness.init(CASES[code]["original"], self.dir, lang_code=code, **kwargs)
         return CASES[code]
 
@@ -61,10 +62,18 @@ class SessionTest(unittest.TestCase):
         for code in CASES:
             with self.subTest(code=code):
                 self.dir = Path(self.tmp.name) / code
-                case = self.start(code)
+                case = self.start(code, passes=None)
                 task = harness.next_task(self.dir)
-                self.assertEqual((task["step"], task["gate"], task["pass"]), ("analysis", "g1", "1/2"))
+                self.assertEqual((task["step"], task["gate"], task["pass"]), ("analysis", "g1", "1/3"))
+                self.assertEqual([s["id"] for s in task["sentences"]], [1, 2])
                 self.analyse(case)
+                task = harness.next_task(self.dir)
+                self.assertEqual((task["step"], task["gate"]), ("plan", "g2"))
+                self.assertEqual(task["state"]["analysis"], {"facts": case["facts"]})
+                self.write("plan.json", {"rows": [{"src": [1], "ops": ["lexical"], "target": 1},
+                                                  {"src": [2], "ops": ["clause"], "target": 1}]})
+                result = harness.submit(self.dir)
+                self.assertTrue(result["ok"], result["issues"])
                 task = harness.next_task(self.dir)
                 self.assertEqual(task["step"], "style")
                 self.assertEqual(task["state"]["facts"], case["facts"])
@@ -78,8 +87,8 @@ class SessionTest(unittest.TestCase):
                 self.assertEqual(harness.next_task(self.dir)["step"], "done")
                 report = json.loads((self.dir / harness.REPORT_FILE).read_text(encoding="utf-8"))
                 self.assertEqual(report["status"], "complete")
-                self.assertEqual(report["passes_run"], ["analysis", "style"])
-                self.assertEqual(report["gates_skipped"], ["g2", "g3", "g4"])
+                self.assertEqual(report["passes_run"], ["analysis", "plan", "style"])
+                self.assertEqual(report["gates_skipped"], ["g3", "g4"])
                 self.assertEqual(report["open_issues"], [])
                 self.assertTrue(report["output"].endswith("p5-style.txt"))
 
@@ -194,7 +203,7 @@ class SessionTest(unittest.TestCase):
 
     def test_init_validation(self):
         bad = [dict(mode="loud"), dict(persona="pirate"), dict(passes="analysis"),
-               dict(passes="style,colour"), dict(passes="plan,style"), dict(max_rounds=-1)]
+               dict(passes="style,colour"), dict(passes="structure,style"), dict(max_rounds=-1)]
         for kwargs in bad:
             with self.subTest(kwargs=kwargs), self.assertRaises(harness.HarnessError):
                 harness.init("Some text.", Path(self.tmp.name) / "x", **kwargs)
@@ -230,7 +239,8 @@ class CliTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             source, session = Path(tmp) / "in.txt", Path(tmp) / "s"
             source.write_text(case["original"], encoding="utf-8")
-            code, out = self.pe("run", "init", str(source), "-o", str(session), "--mode", "standard")
+            code, out = self.pe("run", "init", str(source), "-o", str(session), "--mode", "standard",
+                                "--passes", "analysis,style")
             self.assertEqual(code, 0, out)
             self.assertEqual(out["current"], "analysis")
             self.assertEqual(self.pe("run", "submit", str(session))[0], 2)  # no artifact yet

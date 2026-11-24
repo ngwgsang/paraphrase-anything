@@ -21,6 +21,7 @@ skills/paraphrase-anything/
         ├── check.py              # fidelity check (errors / warnings / accepts)
         ├── metrics.py            # divergence, length, pairwise variant metrics
         ├── harness.py            # pe run: session state machine, passes, gates
+        ├── planning.py           # passes 1–2: analysis and plan validators
         ├── modes.json            # advisory bands per mode
         ├── text.py               # sentence splitting, marker matching
         └── lang/                 # <code>.json language data, loader, pack contract (pack.py)
