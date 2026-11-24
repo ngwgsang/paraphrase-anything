@@ -5,8 +5,10 @@ sentence to the output sentences later gates expect. Validators return error and
 in the ``check`` style; they never judge meaning.
 """
 
+import math
+
 from . import facts, lang
-from .check import Doc
+from .check import Doc, _trigrams
 
 DISCOURSE_TYPES = ("cause", "contrast", "condition", "sequence")
 REGISTERS = ("formal", "neutral", "casual", "academic", "technical", "literary")
@@ -169,3 +171,73 @@ def mapping(plan):
     Stories 024 (plan adherence) and 025 (entailment pairs) consume this mapping.
     """
     return [{"src": list(r["src"]), "target": r["target"], "ops": list(r["ops"])} for r in plan["rows"]]
+
+
+MAX_GROUP = 6      # most output sentences one plan row may produce
+SKIP_COST = 1.2    # cost of a row that receives no output sentence (same scale as check.align)
+
+
+def _row_cost(src_text, group_text):
+    """Dissimilarity of a row's source text and the output sentences assigned to it."""
+    if not group_text:
+        return SKIP_COST
+    ta, tb = _trigrams(src_text), _trigrams(group_text)
+    dice = 2 * len(ta & tb) / (len(ta) + len(tb)) if ta or tb else 1.0
+    return abs(math.log((len(group_text) + 1) / (len(src_text) + 1))) + (1 - dice)
+
+
+def segment(rows, source, output):
+    """Split ``output`` sentences into one contiguous group per plan row, in row order.
+
+    ``source`` maps sentence id to original text. Rows are in output order, so reordering is
+    handled; the split minimises the dissimilarity of each row with its group.
+    Returns one list of output indices per row.
+    """
+    n, m = len(rows), len(output)
+    texts = [" ".join(source[i] for i in row["src"]) for row in rows]
+    inf = math.inf
+    best = [[inf] * (m + 1) for _ in range(n + 1)]
+    back = [[0] * (m + 1) for _ in range(n + 1)]
+    best[0][0] = 0.0
+    for i in range(1, n + 1):
+        for j in range(m + 1):
+            for size in range(0, min(MAX_GROUP, j) + 1):
+                prev = best[i - 1][j - size]
+                if prev == inf:
+                    continue
+                cost = prev + _row_cost(texts[i - 1], " ".join(output[j - size:j]))
+                if cost < best[i][j]:
+                    best[i][j], back[i][j] = cost, size
+    if best[n][m] == inf:  # more output sentences than the rows can absorb
+        return None
+    groups, j = [], m
+    for i in range(n, 0, -1):
+        size = back[i][j]
+        groups.append(list(range(j - size, j)))
+        j -= size
+    return groups[::-1]
+
+
+def adherence(plan, original, rewrite, lang_code, keep=(), drops_done=True):
+    """Errors where ``rewrite`` does not follow the plan: sentence count per row and keep rows.
+
+    With ``drops_done`` False, rows with target 0 still expect their one sentence (the drop
+    belongs to a later pass).
+    """
+    rows = plan["rows"]
+    source = {s["id"]: s["text"] for s in sentences(original, lang_code, keep)}
+    output = [s["text"] for s in sentences(rewrite, lang_code, keep)]
+    expected = [r["target"] if r["target"] or drops_done else 1 for r in rows]
+    groups = segment(rows, source, output)
+    if groups is None:
+        return [{"type": "plan_sentence_count", "expected": sum(expected), "got": len(output)}]
+    errors = []
+    for n, (row, want, group) in enumerate(zip(rows, expected, groups), 1):
+        got = " ".join(output[k] for k in group)
+        if len(group) != want:
+            errors.append({"type": "plan_target_mismatch", "row": n, "src": row["src"],
+                           "expected": want, "got": len(group), "rewritten": got})
+        elif row["ops"] == ["keep"] and " ".join(got.split()) != " ".join(source[row["src"][0]].split()):
+            errors.append({"type": "keep_row_changed", "row": n, "src": row["src"],
+                           "original": source[row["src"][0]], "rewritten": got})
+    return errors

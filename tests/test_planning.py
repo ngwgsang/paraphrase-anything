@@ -205,13 +205,18 @@ class HarnessGatesTest(unittest.TestCase):
         self.assertIn("The bridge", task["constraints"]["protected"])
         self.assertEqual(task["constraints"]["length_ratio"], 0.7)
         self.write("p5-style.review.json", {"verdicts": [{"id": "f1", "verdict": "kept"}]})
-        self.write("p5-style.txt", "The bridge shut in May, so Route 9 saw twice the traffic.")
+        self.assertEqual(task["constraints"]["placeholders"], ["⟦P1⟧"])
+        masked = (self.dir / "masked.txt").read_text(encoding="utf-8")
+        self.assertTrue(masked.startswith("⟦P1⟧ closed in May."))
+        self.write("p5-style.txt", "⟦P1⟧ shut in May, so Route 9 saw twice the traffic.")
         self.assertEqual(types(harness.submit(self.dir)["issues"]), {"length_target"})
         self.write("p5-style.txt", "A bridge shut in May. Route 9 traffic doubled.")
-        self.assertIn("protected_span_missing", types(harness.submit(self.dir)["issues"]))
-        self.write("p5-style.txt", "The bridge shut in May; Route 9 traffic doubled.")
+        self.assertTrue({"placeholder_missing", "protected_span_missing"} <= types(harness.submit(self.dir)["issues"]))
+        self.write("p5-style.txt", "⟦P1⟧ shut in May; Route 9 traffic doubled.")
         result = harness.submit(self.dir)
         self.assertTrue(result["ok"], result["issues"])
+        self.assertEqual((self.dir / "output.txt").read_text(encoding="utf-8"),
+                         "The bridge shut in May; Route 9 traffic doubled.")
 
 
 if __name__ == "__main__":

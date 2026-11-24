@@ -15,7 +15,8 @@ python scripts/pe.py run report <session-dir>                # what ran, what wa
 ```
 
 `pe run init` options: `--mode`, `--persona` (a file in `references/personas/`), `--lang`
-(default auto), `--passes` (comma list; default all available), `--max-rounds` (fix rounds per
+(default auto), `--passes` (comma list of `analysis`, `plan`, `structure`, `lexis`, `style`;
+default all five), `--max-rounds` (fix rounds per
 pass, default 2), `-o` (session directory; default a new temp directory).
 Other commands: `pe run status <session-dir>` and `pe run rewind <session-dir> --to <pass>`.
 
@@ -27,26 +28,34 @@ Other commands: `pe run status <session-dir>` and `pe run rewind <session-dir> -
 | `inputs.original`, `inputs.previous` | The original, and the text this pass starts from. |
 | `output` | The one file to write. Write nothing else in the session directory. |
 | `instructions` | The only reference files to load for this pass. |
-| `duties`, `merged_passes` | What this pass is responsible for, including duties of disabled passes. |
-| `constraints` | Language, mode, persona, `protected` spans to keep verbatim, and `length_ratio`. |
+| `duties`, `ops`, `merged_passes` | What this pass is responsible for, including disabled passes merged into it. |
+| `plan` | Text passes: each plan row with only this pass's ops and its sentence `target`. |
+| `constraints` | Language, mode, persona, `protected` spans, `placeholders` to copy (text passes), and `length_ratio`. |
 | `sentences` | The original's sentences with ids (JSON passes only). |
 | `state.facts`, `state.analysis` | The frozen analysis (after pass 1). Every later gate re-checks the facts. |
 | `round`, `max_rounds`, `issues` | Fix round, limit, and what the last failed gate found. |
 | `review`, `review_required` | Optional review file for text passes; required items are listed. |
 
-## Passes available now
+## Passes
 
 - **analysis** (gate 1): write `analysis.json` (facts, constraints, discourse, register) as in
-  [analysis](analysis.md); the task lists the original's `sentences` with ids. Once gate 1
-  passes the file is **frozen**: editing it makes every command exit 2. To change it, run
-  `pe run rewind <session-dir> --to analysis`, which discards every later artifact.
+  [analysis](analysis.md); the task lists the original's `sentences` with ids.
   `constraints.keep` terms become protected spans and `constraints.length_ratio` is enforced at
   the last gate.
 - **plan** (gate 2): write `plan.json`, one row per output unit covering every sentence once, as
   in [plan](plan.md).
-- **style** (gate 5): write the finished rewrite to `p5-style.txt`. The gate runs `pe check`
-  against the original and, when facts are frozen, checks every anchor and requires a verdict
-  per fact. Put accepts and verdicts in `p5-style.review.json`:
+- **structure**, **lexis**, **style** (gates 3–5): rewrite one layer at a time, as in
+  [layers](layers.md). The first text pass starts from `masked.txt` (protected spans replaced by
+  placeholders); each later one starts from the previous pass. Every gate restores the
+  placeholders and runs `pe check` against the original; the last one writes the finished,
+  restored rewrite to `output.txt`.
+
+`analysis.json` and `plan.json` are **frozen** once their gate passes: editing them makes every
+command exit 2. To change one, run `pe run rewind <session-dir> --to analysis` (or `--to plan`),
+which discards that pass and every later artifact.
+
+Text passes take an optional review file (`p5-style.review.json` for style, and so on) with
+accepts and verdicts. When facts are frozen, the last text pass must give a verdict per fact:
 
 ```json
 {"accept": [{"id": "w1", "reason": "double negative rewritten as a positive"}],

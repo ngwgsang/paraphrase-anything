@@ -62,7 +62,7 @@ class SessionTest(unittest.TestCase):
         for code in CASES:
             with self.subTest(code=code):
                 self.dir = Path(self.tmp.name) / code
-                case = self.start(code, passes=None)
+                case = self.start(code, passes="analysis,plan,style")
                 task = harness.next_task(self.dir)
                 self.assertEqual((task["step"], task["gate"], task["pass"]), ("analysis", "g1", "1/3"))
                 self.assertEqual([s["id"] for s in task["sentences"]], [1, 2])
@@ -90,7 +90,8 @@ class SessionTest(unittest.TestCase):
                 self.assertEqual(report["passes_run"], ["analysis", "plan", "style"])
                 self.assertEqual(report["gates_skipped"], ["g3", "g4"])
                 self.assertEqual(report["open_issues"], [])
-                self.assertTrue(report["output"].endswith("p5-style.txt"))
+                self.assertTrue(report["output"].endswith("output.txt"))
+                self.assertEqual((self.dir / "output.txt").read_text(encoding="utf-8"), case["good"])
 
     def test_next_is_idempotent_and_single(self):
         self.start()
@@ -173,7 +174,7 @@ class SessionTest(unittest.TestCase):
     def test_analysis_is_frozen_until_rewind(self):
         case = self.start()
         self.analyse(case)
-        self.assertEqual(harness.status(self.dir)["frozen"], "analysis.json")
+        self.assertEqual(harness.status(self.dir)["frozen"], ["analysis.json"])
         self.write("analysis.json", {"facts": case["facts"] + [{"id": "f2", "fact": "y", "anchors": []}]})
         with self.assertRaises(harness.HarnessError):
             harness.next_task(self.dir)
@@ -189,7 +190,7 @@ class SessionTest(unittest.TestCase):
         for name in ("analysis.json", "p5-style.txt", "p5-style.review.json", harness.REPORT_FILE):
             self.assertFalse((self.dir / name).exists(), name)
         state = harness.status(self.dir)
-        self.assertEqual((state["status"], state["current"], state["frozen"]), ("in_progress", "analysis", None))
+        self.assertEqual((state["status"], state["current"], state["frozen"]), ("in_progress", "analysis", []))
         self.assertTrue(all(h["invalidated"] for h in state["history"]))
         self.assertNotIn("state", harness.next_task(self.dir))
         self.analyse(case)
@@ -203,7 +204,7 @@ class SessionTest(unittest.TestCase):
 
     def test_init_validation(self):
         bad = [dict(mode="loud"), dict(persona="pirate"), dict(passes="analysis"),
-               dict(passes="style,colour"), dict(passes="structure,style"), dict(max_rounds=-1)]
+               dict(passes="style,colour"), dict(passes=""), dict(max_rounds=-1)]
         for kwargs in bad:
             with self.subTest(kwargs=kwargs), self.assertRaises(harness.HarnessError):
                 harness.init("Some text.", Path(self.tmp.name) / "x", **kwargs)
