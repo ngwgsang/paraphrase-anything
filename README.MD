@@ -76,6 +76,23 @@ python skills/paraphrase-anything/scripts/pe.py restore masked-rewrite.txt --map
 - Language Notes: [English](skills/paraphrase-anything/references/languages/en.md), [Vietnamese](skills/paraphrase-anything/references/languages/vi.md), [Japanese](skills/paraphrase-anything/references/languages/ja.md), [Chinese](skills/paraphrase-anything/references/languages/zh.md).
 - [Language Packs](skills/paraphrase-anything/scripts/paraphrase_everything/lang/README.md) — Add a language with data files only (`pe lang new`, tiers, fixtures).
 
+## Roadmap
+
+| Feature | Status |
+|---------|--------|
+| Protected spans, fidelity check, divergence metrics | ✅ |
+| Modes, personas, diverse variants | ✅ |
+| Key facts extraction and verification | ✅ |
+| Long documents (chunking and shared glossary) | ✅ |
+| Markdown and subtitle (SRT/VTT) I/O | ✅ |
+| Claude Code, Codex, Gemini CLI, Cursor, Windsurf, Copilot | ✅ |
+| Full evaluation suite | 🚧 |
+| Layered harness (analyse, plan, rewrite in passes) | 🚧 |
+| Configurable verification gates | 🚧 |
+| Readability lint | 🚧 |
+| `.docx` support | 🚧 |
+| Installer for other agents | 🚧 |
+
 ## Star History
 
 <a href="https://star-history.com/#ngwgsang/paraphrase-everything&Date">
