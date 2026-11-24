@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 
-from . import __version__, check, chunk, facts, glossary, lang, metrics, protect
+from . import __version__, check, chunk, facts, glossary, harness, lang, metrics, protect
 from . import io as formats
 from .lang import pack
 
@@ -299,6 +299,43 @@ def cmd_langs(args):
     return {"ok": ok, "langs": langs}, EXIT_OK if ok else EXIT_ISSUES
 
 
+RUN_FLAGS = {"init": {"mode", "persona", "lang", "passes", "max_rounds", "output"}, "rewind": {"to"}}
+RUN_DEFAULTS = {"mode": None, "persona": None, "lang": "auto", "passes": None, "max_rounds": None,
+                "output": None, "to": None}
+
+
+def cmd_run(args):
+    """Drive a harness session: init, next, submit, status, rewind, report."""
+    misplaced = [f"--{k.replace('_', '-')}" for k, default in RUN_DEFAULTS.items()
+                 if getattr(args, k) != default and k not in RUN_FLAGS.get(args.action, set())]
+    if misplaced:
+        return {"ok": False, "error": f"pe run {args.action} does not take {', '.join(misplaced)}"}, EXIT_ERROR
+    try:
+        if args.action == "init":
+            text = _read_input(argparse.Namespace(input=args.target, text=None))
+            max_rounds = harness.DEFAULT_MAX_ROUNDS if args.max_rounds is None else args.max_rounds
+            state = harness.init(text, args.output, mode=args.mode or "standard", persona=args.persona,
+                                 lang_code=args.lang, passes=args.passes, max_rounds=max_rounds)
+            return {"ok": True, "session": state["session_dir"], "passes": state["passes"],
+                    "lang": state["lang"], "current": state["current"]}, EXIT_OK
+        if args.action == "next":
+            task = harness.next_task(args.target)
+            return dict(task, ok=task["step"] != "incomplete"), EXIT_ISSUES if task["step"] == "incomplete" else EXIT_OK
+        if args.action == "submit":
+            result = harness.submit(args.target)
+            return result, EXIT_OK if result["ok"] else EXIT_ISSUES
+        if args.action == "status":
+            return dict(harness.status(args.target), ok=True), EXIT_OK
+        if args.action == "rewind":
+            if not args.to:
+                raise harness.HarnessError("pe run rewind needs --to <pass>")
+            return harness.rewind(args.target, args.to), EXIT_OK
+        report = harness.write_report(args.target)
+        return dict(report, ok=report["status"] == "complete"), EXIT_OK if report["status"] == "complete" else EXIT_ISSUES
+    except harness.HarnessError as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
+
+
 def cmd_lang(args):
     """Scaffold a new language pack (``pe lang new <code>``)."""
     try:
@@ -426,6 +463,18 @@ def build_parser():
 
     p = sub.add_parser("langs", help="list installed language packs: tier, checks, problems")
     p.set_defaults(func=cmd_langs)
+
+    p = sub.add_parser("run", help="harness session: pe drives the workflow one task at a time")
+    p.add_argument("action", choices=["init", "next", "submit", "status", "rewind", "report"])
+    p.add_argument("target", help="input path or '-' for init; the session directory otherwise")
+    p.add_argument("-o", "--output", help="init: session directory (default: a new temp directory)")
+    p.add_argument("--mode", choices=sorted(metrics.MODES), help="init: rewrite mode (default: standard)")
+    p.add_argument("--persona", help="init: persona pack name from references/personas/")
+    p.add_argument("--lang", default="auto", help="init: language code (default: auto-detect)")
+    p.add_argument("--passes", help="init: comma-separated passes to enable (default: all available)")
+    p.add_argument("--max-rounds", type=int, help=f"init: fix rounds per pass (default: {harness.DEFAULT_MAX_ROUNDS})")
+    p.add_argument("--to", help="rewind: the pass to resume from")
+    p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("lang", help="manage language packs: 'pe lang new <code>' scaffolds one")
     p.add_argument("action", choices=["new"], help="what to do")
