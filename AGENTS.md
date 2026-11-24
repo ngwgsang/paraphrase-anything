@@ -23,6 +23,7 @@ skills/paraphrase-anything/
         ├── harness.py            # pe run: session state machine, passes 1–5, gates
         ├── planning.py           # analysis/plan validators, plan adherence
         ├── entailment.py         # entailment pairs and verdict checks (last text gate)
+        ├── routes.py             # Files / Long / Variants helpers for harness sessions
         ├── modes.json            # advisory bands per mode
         ├── presets.json          # harness presets: passes, gates, judge (references/presets.md)
         ├── text.py               # sentence splitting, marker matching

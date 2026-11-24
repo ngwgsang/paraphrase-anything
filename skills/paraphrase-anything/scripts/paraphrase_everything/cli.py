@@ -6,6 +6,7 @@ Exit codes: 0 ok, 1 completed with issues, 2 usage or input error.
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from . import __version__, check, chunk, facts, glossary, harness, lang, metrics, protect
 from . import io as formats
@@ -299,11 +300,10 @@ def cmd_langs(args):
     return {"ok": ok, "langs": langs}, EXIT_OK if ok else EXIT_ISSUES
 
 
-RUN_FLAGS = {"init": {"mode", "persona", "lang", "passes", "gates", "preset", "max_rounds", "output"},
+RUN_FLAGS = {"init": {"mode", "persona", "lang", "passes", "gates", "preset", "variants", "max_rounds", "output"},
              "rewind": {"to"}}
 RUN_DEFAULTS = {"mode": None, "persona": None, "lang": "auto", "passes": None, "gates": None, "preset": None,
-                "max_rounds": None,
-                "output": None, "to": None}
+                "variants": None, "max_rounds": None, "output": None, "to": None}
 
 
 def cmd_run(args):
@@ -316,12 +316,14 @@ def cmd_run(args):
         if args.action == "init":
             text = _read_input(argparse.Namespace(input=args.target, text=None))
             max_rounds = harness.DEFAULT_MAX_ROUNDS if args.max_rounds is None else args.max_rounds
+            fmt = formats.EXTENSIONS.get(Path(args.target).suffix.lower(), "text") if args.target != "-" else "text"
             state = harness.init(text, args.output, mode=args.mode or "standard", persona=args.persona,
                                  lang_code=args.lang, passes=args.passes, max_rounds=max_rounds,
-                                 gates=args.gates, preset=args.preset)
+                                 gates=args.gates, preset=args.preset, fmt=fmt, variants=args.variants or 1)
             return {"ok": True, "session": state["session_dir"], "passes": state["passes"],
                     "gates": state["gates"], "resolutions": state["resolutions"],
-                    "lang": state["lang"], "current": state["current"]}, EXIT_OK
+                    "lang": state["lang"], "format": state["format"], "long": state["long"],
+                    "variants": state["variants"], "current": state["current"]}, EXIT_OK
         if args.action == "next":
             task = harness.next_task(args.target)
             return dict(task, ok=task["step"] != "incomplete"), EXIT_ISSUES if task["step"] == "incomplete" else EXIT_OK
@@ -481,6 +483,7 @@ def build_parser():
     p.add_argument("--gates", help="init: comma-separated gates to run, e.g. 1,3,5 ('' for none; "
                    "the final floor check always runs)")
     p.add_argument("--preset", help="init: fast, standard, or strict (from presets.json)")
+    p.add_argument("--variants", type=int, help="init: number of distinct rewrites (2-5; needs pass plan)")
     p.add_argument("--max-rounds", type=int, help=f"init: fix rounds per pass (default: {harness.DEFAULT_MAX_ROUNDS})")
     p.add_argument("--to", help="rewind: the pass to resume from")
     p.set_defaults(func=cmd_run)

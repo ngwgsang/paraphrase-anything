@@ -6,7 +6,8 @@ description: Paraphrase, rewrite, or reword any text in a chosen tone (formal, c
 # Paraphrase Anything
 
 Rewrite text in the requested style while the **original stays the single source of truth**.
-You write; the bundled `pe` tool verifies. Never grade your own rewrite by eye alone.
+You write; the bundled `pe` tool drives the work and verifies it. Never grade your own rewrite
+by eye alone.
 
 `pe` is zero-install (Python ≥ 3.9 standard library). Run it as:
 
@@ -18,109 +19,90 @@ All commands print JSON. Exit code `0` = ok, `1` = issues found, `2` = usage/inp
 
 ## Workflow
 
+Every request runs as a **harness session**: `pe run` keeps the state, gives you one task at a
+time, and gates each pass against the original. You never choose the next step yourself.
+
 ### 1. Pin the original
-Save the user's text **verbatim** to a temp file (outside the user's project), e.g.
-`<tmp>/pe-<short-id>/original.txt`. Never edit this file. Every check compares against it.
+Save the user's text **verbatim** to a temp file outside the user's project, e.g.
+`<tmp>/pe-<short-id>/input.txt` (keep the extension of a `.md`, `.srt`, or `.vtt` file). Never
+edit it: `pe run init` copies it into the session and every gate compares against that copy.
 
 ### 2. Resolve the request
 | Setting | Default | Notes |
 |---------|---------|-------|
 | mode | `standard` | `light`, `standard`, `creative`, `shorten`, `expand`; see [modes](references/modes.md) |
 | language | same as input | if the user wants another language, that is translation; ask first |
-| length | about the same | "shorter / 70%" → `shorten` with a target ratio |
-| variants | 1 | "give me 3 versions" → variants flow |
-| tone / persona | none | any file in [personas](references/personas/) (list the folder); apply within the chosen mode |
+| length | about the same | "shorter / 70%" → `shorten`; give the ratio in pass 1 (`length_ratio`) |
+| variants | 1 | "give me 3 versions" → `--variants 3` |
+| tone / persona | none | any file in [personas](references/personas/) (list the folder) |
+| preset | by route | see below and [presets](references/presets.md) |
 
-Load only what you need: [modes](references/modes.md), the one persona file requested, [variants](references/variants.md), [preservation rules](references/preservation.md), [response format](references/response.md), [key facts](references/facts.md),
-and the language note for the input language, `references/languages/<code>.md` (any file in
-[languages](references/languages/); `pe detect` gives the code, `pe langs` lists installed packs).
+Pick the preset by the request:
+- `fast`: a sentence or a short paragraph of plain prose.
+- `standard`: most rewrites.
+- `strict`: the user wants the exact meaning kept, or the text is legal, medical, financial, or
+  otherwise high-stakes. Also use it for text over ~150 words with facts that must survive.
 
-### 3. Extract key facts (long or high-stakes text)
-If the text is over ~150 words, or the user wants strict or exact meaning, list the 3–8 facts
-that must survive (one short claim each, with literal `anchors`) in `facts.json`, then run
-`pe facts original.txt --facts facts.json`. Details and formats: [facts](references/facts.md).
-Skip this step for short text.
+### 3. Start the session
+```bash
+python scripts/pe.py run init <tmp>/input.txt --preset standard --mode standard [--persona name] [--variants N]
+```
+`init` prints the session directory, the passes and gates, and any `resolutions` it applied. It
+detects the route itself: Files for `.md` / `.srt` / `.vtt`, Long above ~3,000 words, Variants
+with `--variants`. See [routes](references/routes.md) for the extra task fields of each route.
 
-### 4. Pick a route
+### 4. Loop: next → write → submit
+```bash
+python scripts/pe.py run next <session-dir>      # one task as JSON
+# write exactly the file named in "output" (plus "review" / entailment files when asked)
+python scripts/pe.py run submit <session-dir>    # 0 = passed, 1 = fix needed, 2 = error
+```
+Repeat until `next` returns `{"step": "done"}` or `{"step": "incomplete"}`. For each task:
 
-**Simple:** short plain prose (under ~300 words, no code, URLs, math, or HTML).
-1. Rewrite directly.
-2. Save the rewrite to `rewrite.txt` and run `pe check original.txt rewrite.txt`.
+- Load **only** the files in `instructions`, and follow `duties`, `ops`, and `plan`.
+- Text passes start from `inputs.previous`. Copy every `⟦Pn⟧` placeholder exactly once.
+- Never edit `original.txt`, `analysis.json`, or `plan.json` after their gates pass; to change a
+  plan, `pe run rewind <session-dir> --to plan`.
+- When `issues` come back, fix only what they name. Warnings that are false positives can be
+  accepted with a reason in the review file; errors cannot.
+- At the last pass, run `pe run pairs <session-dir>` after writing the rewrite and judge every
+  pair in both directions, as in [entailment](references/entailment.md). Where your tool supports
+  subagents, give the pairs (not the plan) to a fresh subagent and set `"judge": "independent"`.
 
-**Structured:** contains code, inline code, URLs, LaTeX, or HTML, or the user names terms to keep.
-1. `pe protect original.txt -o masked.txt --map map.json [--keep "Term"]`
-2. Rewrite `masked.txt`. Keep every `⟦Pn⟧` placeholder exactly once; move it with its phrase
-   if the sentence is reordered.
-3. `pe restore masked-rewrite.txt --map map.json -o rewrite.txt`. Fix any reported placeholder issue.
-4. `pe check original.txt rewrite.txt [--keep "Term"]`
+Pass 1 (analysis) is where you extract key facts: 3–8 short claims with literal anchors that
+every later gate re-checks; see [key facts](references/facts.md).
 
-**Files:** a `.md`, `.srt`, or `.vtt` input, or any document where only the prose should change.
-1. `pe extract notes.md -o segments.json` lists the rewritable segments (`id`, `text`). Code,
-   tables, front matter, HTML, and subtitle indices and timings are never listed.
-2. Rewrite each `text` in `segments.json`, keeping every `id`. Segments that contain inline code
-   or URLs follow the Structured route. For subtitles keep lines short and the meaning per cue.
-3. `pe rebuild notes.md --segments segments.json -o notes.paraphrased.md` puts the texts back and
-   keeps line endings. For `.srt`/`.vtt` it also reports advisory line-length and reading-speed
-   warnings (`--max-line-chars`, `--max-cps` override the per-language defaults).
-4. `pe check notes.md notes.paraphrased.md`.
+Details: [harness](references/harness.md), [layers](references/layers.md),
+[analysis](references/analysis.md), [plan](references/plan.md),
+[preservation rules](references/preservation.md), and the language note for the input
+language, `references/languages/<code>.md` (any file in [languages](references/languages/)).
 
-**Long:** over ~3,000 words (~6,000 characters for Japanese). Process chunks one after another.
-1. If the text has code, URLs, or LaTeX, run `pe protect` first (Structured route).
-2. `pe chunk masked.txt -o chunks/` writes `001.md`, `002.md`, ... and `manifest.json`
-   (`needs_chunking` is false below the threshold; then use the Simple or Structured route).
-3. `pe glossary masked.txt -o glossary.json [--keep "Term"] [--term "Term"]`. For each entry set
-   `decision` to `keep` or `rewrite-consistently` and give a `rendering` for the latter.
-4. For each chunk in order, rewrite it into `rewritten/NNN.md` (same file name). Give yourself
-   the glossary and the last paragraph of the previous rewritten chunk as read-only context.
-   Never summarise: later chunks get the same care as the first.
-5. `pe merge chunks/ --rewritten-dir rewritten/ -o masked-rewrite.txt`, then `pe restore` if you
-   protected, and `pe check original.txt rewrite.txt`.
-6. `pe glossary masked.txt --glossary glossary.json --rewritten masked-rewrite.txt` reports
-   lost terms and inconsistent renderings. Fix those sentences like check warnings.
-
-**Variants:** N versions requested.
-1. Give each variant a different axis so they differ in substance, not just synonyms:
-   structure (reorder, merge, split), register (more formal or more casual), concision,
-   voice (active or passive), vocabulary. Choose axes that fit the mode; see [variants](references/variants.md).
-2. Check every variant on its own with `pe check`.
-3. `pe metrics --pairwise v1.txt v2.txt v3.txt` (or `--pairwise --variant "v1" --variant "v2"` for raw text).
-   For each pair in `too_similar`, rewrite the weaker one along a different axis (at most one extra round).
-
-### 5. Verify and fix
-`pe check` returns `errors`, `warnings`, `unsupported`:
-
-- **Errors** (numbers, citations, protected spans, leftover placeholders) must be fixed. Edit
-  only the affected sentence, then re-run.
-- **Warnings** (negation or hedge count changed, proper noun missing, sentence dropped or added):
-  look at the quoted `original` and `rewritten` text.
-  - If meaning really changed → fix the sentence.
-  - If the change is legitimate (e.g. "not uncommon" → "common") → accept it with a reason:
-    write `[{"id": "w1", "reason": "double negative rewritten as positive"}]` to `accept.json`
-    and re-run with `--accept accept.json`.
-- **unsupported** lists checks the language data cannot run; review those aspects yourself.
-
-If you extracted facts, also run `pe facts original.txt rewrite.txt --facts facts.json
---verdicts verdicts.json`: it checks the anchors and that you judged every fact `kept`,
-`changed`, or `lost`. Fix `changed` and `lost` facts like errors.
-
-Optionally run `pe metrics original.txt rewrite.txt --mode <mode>` for divergence and length.
-Bands are advisory: `above` in standard mode means you stayed close to the original, so rewrite
-more only if the user wanted a real paraphrase. Do not swap words just to move a number.
-For explicit length targets use `--target-ratio 0.7`; that one is enforced (±10%).
-
-Stop after **2 fix rounds**. If issues remain, say exactly which ones.
+### 5. Report
+```bash
+python scripts/pe.py run report <session-dir>
+```
+Use the report for the verification line: `gates_run`, `skipped_checks`, `accepted_warnings`,
+`open_issues`, fact verdicts, and `entailment.judge`. An `incomplete` session is **not
+verified**: say which issues are still open and never present it as checked.
 
 ### 6. Respond
 Follow [response](references/response.md). In short, answer with:
-1. The rewrite (each variant labelled with its axis) in a plain-text ```text block, so it can be
-   copied as is. Keep the input's formatting inside the block.
+1. The rewrite (from the report's `output`; each variant labelled with its axis) in a
+   plain-text ```text block, so it can be copied as is. Keep the input's formatting inside it.
 2. A **What changed** table of verbatim `Original | Rewritten | Change` fragments.
-3. One verification line, e.g. "Checked: numbers, citations, links and code unchanged."
-   List any remaining warnings honestly. Do not paste the JSON.
+3. One verification line built from the report, e.g. "Checked: numbers, citations, links and
+   code unchanged; key facts 4/4 kept; entailment judged by a subagent. Skipped: length target."
+   Do not paste the JSON.
 4. 2–4 **follow-up suggestions** the user can copy as their next request.
 
-If the input is a file, write the result to a new file next to it (e.g. `name.paraphrased.md`)
-unless the user asked to overwrite; show the table and follow-ups in the chat only.
+If the input is a file, copy the rebuilt output (e.g. `output.md`) to a new file next to it
+(e.g. `name.paraphrased.md`) unless the user asked to overwrite; show the table and follow-ups in
+the chat only.
+
+## When the harness cannot run
+If your tool cannot keep files between commands, or `pe run init` rejects the input, use the
+[manual routes](references/manual.md) and say in the verification line that the checks were run
+manually.
 
 ## Hard rules
 - Never change facts, numbers, dates, names, quotes, citations, code, or links.

@@ -213,7 +213,7 @@ class FactsDocsTest(unittest.TestCase):
         skill = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
         doc = (SKILL_DIR / "references" / "facts.md").read_text(encoding="utf-8")
         self.assertIn("references/facts.md", skill)
-        self.assertIn("Extract key facts", skill)
+        self.assertIn("extract key facts", skill)
         for phrase in ("120 characters", "anchors", "verdicts.json", "Independent pass"):
             self.assertIn(phrase, doc)
         response = (SKILL_DIR / "references" / "response.md").read_text(encoding="utf-8")

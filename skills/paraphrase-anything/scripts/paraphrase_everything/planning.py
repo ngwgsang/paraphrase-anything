@@ -186,21 +186,27 @@ def _row_cost(src_text, group_text):
     return abs(math.log((len(group_text) + 1) / (len(src_text) + 1))) + (1 - dice)
 
 
-def segment(rows, source, output):
+def segment(rows, source, output, expected=None):
     """Split ``output`` sentences into one contiguous group per plan row, in row order.
 
     ``source`` maps sentence id to original text. Rows are in output order, so reordering is
-    handled; the split minimises the dissimilarity of each row with its group.
-    Returns one list of output indices per row.
+    handled; the split minimises the dissimilarity of each row with its group. ``expected``
+    (default: each row's ``target``) bounds the search to a band around the planned counts,
+    which keeps long texts fast. Returns one list of output indices per row.
     """
     n, m = len(rows), len(output)
     texts = [" ".join(source[i] for i in row["src"]) for row in rows]
+    expected = [r["target"] for r in rows] if expected is None else expected
+    prefix = [0]
+    for count in expected:
+        prefix.append(prefix[-1] + count)
+    band = max(MAX_GROUP, abs(m - prefix[-1]) + 4)
     inf = math.inf
     best = [[inf] * (m + 1) for _ in range(n + 1)]
     back = [[0] * (m + 1) for _ in range(n + 1)]
     best[0][0] = 0.0
     for i in range(1, n + 1):
-        for j in range(m + 1):
+        for j in range(max(0, prefix[i] - band), min(m, prefix[i] + band) + 1):
             for size in range(0, min(MAX_GROUP, j) + 1):
                 prev = best[i - 1][j - size]
                 if prev == inf:
@@ -228,7 +234,7 @@ def adherence(plan, original, rewrite, lang_code, keep=(), drops_done=True):
     source = {s["id"]: s["text"] for s in sentences(original, lang_code, keep)}
     output = [s["text"] for s in sentences(rewrite, lang_code, keep)]
     expected = [r["target"] if r["target"] or drops_done else 1 for r in rows]
-    groups = segment(rows, source, output)
+    groups = segment(rows, source, output, expected)
     if groups is None:
         return [{"type": "plan_sentence_count", "expected": sum(expected), "got": len(output)}]
     errors = []

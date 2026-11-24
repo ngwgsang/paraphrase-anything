@@ -18,9 +18,12 @@ python scripts/pe.py run report <session-dir>                # what ran, what wa
 `pe run init` options: `--mode`, `--persona` (a file in `references/personas/`), `--lang`
 (default auto), `--passes` (comma list of `analysis`, `plan`, `structure`, `lexis`, `style`;
 default all five), `--gates` (comma list of gate numbers, `""` for none; default all),
-`--preset` (`fast`, `standard`, `strict`; see [presets](presets.md)), `--max-rounds` (fix rounds
+`--preset` (`fast`, `standard`, `strict`; see [presets](presets.md)), `--variants` (2–5 distinct
+rewrites; needs pass `plan`), `--max-rounds` (fix rounds
 per pass, default 2), `-o` (session directory; default a new temp directory). A final floor check
 against the original runs in every configuration; `init` lists any `resolutions` it applied.
+A `.md`, `.srt`, or `.vtt` input path starts a Files session; input over ~3,000 words starts a
+Long session (chunk by chunk). See [routes](routes.md) for the task fields these routes add.
 Other commands: `pe run status <session-dir>`, `pe run rewind <session-dir> --to <pass>`, and
 `pe run pairs <session-dir>` (the entailment pairs of the last pass's current rewrite).
 

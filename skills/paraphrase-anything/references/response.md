@@ -6,11 +6,25 @@ Use this layout for every answer after verification. Write all labels in the use
 
 1. **The rewrite**, inside a plain-text code block (see below) so the user can copy it.
 2. **What changed**: a table (below).
-3. **Verification**: one line, e.g. "Checked: numbers, citations, links and code unchanged."
-   List remaining warnings honestly. If key facts were used, add "Key facts: N/N kept" and
-   list any fact that is still `changed` or `lost`. After a harness session, name the report's
-   `skipped_checks`, e.g. "Skipped: entailment, length target." (see [presets](presets.md)).
+3. **Verification**: one line built from the session report (below).
 4. **Follow-ups**: suggested next requests (below).
+
+## Verification line
+
+Build it from `pe run report <session-dir>`, never from memory:
+
+| Report field | Goes into the line as |
+|--------------|-----------------------|
+| `status` | `complete` → "Checked: ..."; `incomplete` → "Not verified: ..." with the open issues |
+| `gates_run` | what was checked: numbers, citations, links and code (every session), plus the plan, layers, entailment when their gates ran |
+| fact verdicts (pass 1) | "Key facts: N/N kept"; name any fact still `changed` or `lost` |
+| `entailment.judge` | "entailment judged by a subagent" (`independent`) or "self-judged entailment" (`self`) |
+| `accepted_warnings` | "Accepted: double negative made positive" (short reasons) |
+| `skipped_checks` | "Skipped: entailment, length target." (see [presets](presets.md)) |
+
+Example: "Checked: numbers, citations, links and code unchanged; key facts 4/4 kept;
+self-judged entailment. Skipped: length target." Without a session (manual routes), say
+"Checked manually: ..." and list remaining warnings honestly.
 
 ## The rewrite block
 
