@@ -305,7 +305,7 @@ RUN_DEFAULTS = {"mode": None, "persona": None, "lang": "auto", "passes": None, "
 
 
 def cmd_run(args):
-    """Drive a harness session: init, next, submit, status, rewind, report."""
+    """Drive a harness session: init, next, submit, pairs, status, rewind, report."""
     misplaced = [f"--{k.replace('_', '-')}" for k, default in RUN_DEFAULTS.items()
                  if getattr(args, k) != default and k not in RUN_FLAGS.get(args.action, set())]
     if misplaced:
@@ -324,6 +324,8 @@ def cmd_run(args):
         if args.action == "submit":
             result = harness.submit(args.target)
             return result, EXIT_OK if result["ok"] else EXIT_ISSUES
+        if args.action == "pairs":
+            return harness.entailment_pairs(args.target), EXIT_OK
         if args.action == "status":
             return dict(harness.status(args.target), ok=True), EXIT_OK
         if args.action == "rewind":
@@ -465,7 +467,7 @@ def build_parser():
     p.set_defaults(func=cmd_langs)
 
     p = sub.add_parser("run", help="harness session: pe drives the workflow one task at a time")
-    p.add_argument("action", choices=["init", "next", "submit", "status", "rewind", "report"])
+    p.add_argument("action", choices=["init", "next", "submit", "pairs", "status", "rewind", "report"])
     p.add_argument("target", help="input path or '-' for init; the session directory otherwise")
     p.add_argument("-o", "--output", help="init: session directory (default: a new temp directory)")
     p.add_argument("--mode", choices=sorted(metrics.MODES), help="init: rewrite mode (default: standard)")

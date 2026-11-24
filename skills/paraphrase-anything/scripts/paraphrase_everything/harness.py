@@ -7,7 +7,8 @@ All state lives in ``session.json`` so a session survives process restarts.
 
 Text passes (story 024) work on a masked copy of the original: protected spans become
 placeholders, every gate restores them before comparing with the original, and the finished
-rewrite is written restored to ``output.txt``.
+rewrite is written restored to ``output.txt``. The last text gate also verifies the agent's
+entailment verdicts (story 025).
 """
 
 import hashlib
@@ -15,7 +16,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from . import check, facts, lang, metrics, planning, protect
+from . import check, entailment, facts, lang, metrics, planning, protect
 
 SKILL_DIR = Path(__file__).resolve().parents[2]
 REFERENCES = SKILL_DIR / "references"
@@ -85,6 +86,11 @@ def _write_json(path, data):
 def _review_name(artifact):
     """Name of the optional review file (accepts, verdicts) that goes with a text artifact."""
     return Path(artifact).stem + ".review.json"
+
+
+def _nli_name(artifact):
+    """Name of the entailment verdicts file that goes with a text artifact."""
+    return Path(artifact).stem + ".nli.json"
 
 
 # --- session state --------------------------------------------------------------------------
@@ -252,6 +258,8 @@ def _references(state, pid):
         names.append(f"languages/{state['lang']}.md")
     if pid == FINAL_PASS and state["persona"]:
         names.append(f"personas/{state['persona']}.md")
+    if pid == state["passes"][-1]:
+        names.append("entailment.md")
     return [str(REFERENCES / n) for n in dict.fromkeys(names) if (REFERENCES / n).is_file()]
 
 
@@ -322,8 +330,17 @@ def next_task(session_dir):
         task["review"] = str(session_dir / _review_name(spec["artifact"]))
         task["review_format"] = {"accept": [{"id": "w1", "reason": "why the warning is a false positive"}],
                                  "verdicts": [{"id": "f1", "verdict": "kept", "note": ""}]}
-        if analysis and pid == state["passes"][-1]:
-            task["review_required"] = ["verdicts: one per fact in state.facts"]
+        if pid == state["passes"][-1]:
+            task["review_required"] = (["verdicts: one per fact in state.facts"] if analysis else []) +                 [f"{_nli_name(spec['artifact'])}: both entailment verdicts for every pair"]
+            task["entailment"] = {
+                "file": str(session_dir / _nli_name(spec["artifact"])),
+                "basis": "plan" if plan else "aligner",
+                "pairs_command": f"python scripts/pe.py run pairs {session_dir}",
+                "format": {"judge": "self", "pairs": [{
+                    "pair": "r1", "forward": "entail", "backward": "entail",
+                    "evidence": {"src": "quote from the original", "rew": "quote from the rewrite"},
+                    "reason": ""}]},
+            }
     if analysis:
         task["state"] = {"facts": analysis["facts"], "analysis": analysis}
     return task
@@ -386,6 +403,58 @@ def restored_text(session_dir, state, pid):
     return restored, report["issues"]
 
 
+def _entailment_pairs(session_dir, state, pid, original, rewrite, warnings):
+    """``(pairs, basis)`` of the text artifact of ``pid``, flagged with ``warnings``."""
+    keep = _constraints(frozen_analysis(session_dir, state))[0]
+    plan = _frozen_json(session_dir, state, "plan")
+    found, basis = entailment.pairs(original, rewrite, state["lang"], keep, plan, state["mode"])
+    return (None if found is None else entailment.flag(found, warnings)), basis
+
+
+def entailment_pairs(session_dir):
+    """The pairs the agent must judge for the current rewrite of the last text pass."""
+    session_dir = Path(session_dir)
+    state = load(session_dir)
+    last = state["passes"][-1]
+    if state["status"] != "in_progress" or state["current"] != last:
+        raise HarnessError(f"pairs are judged at the last pass ({last}); the session is at "
+                           f"{state['current'] or state['status']}")
+    artifact = BY_ID[last]["artifact"]
+    if not (session_dir / artifact).is_file():
+        raise HarnessError(f"write {artifact} first: pairs come from the rewrite")
+    original = _read_text(session_dir / ORIGINAL_FILE)
+    rewrite = restored_text(session_dir, state, last)[0]
+    keep = _constraints(frozen_analysis(session_dir, state))[0]
+    chk = check.check(original, rewrite, lang_code=state["lang"], keep=keep)
+    found, basis = _entailment_pairs(session_dir, state, last, original, rewrite, chk["warnings"])
+    if found is None:
+        raise HarnessError("the rewrite has more sentences than the plan rows can hold; "
+                           "submit it to see the plan issues")
+    return {"ok": True, "pass": last, "file": str(session_dir / _nli_name(artifact)), "basis": basis,
+            "pairs": [{k: p[k] for k in ("pair", "src", "original", "rewritten", "may_drop", "flags")}
+                      for p in found]}
+
+
+def _gate_entailment(session_dir, state, pid, original, rewrite, chk):
+    """``(issues, summary)`` of the entailment verdicts for the last text pass."""
+    found, basis = _entailment_pairs(session_dir, state, pid, original, rewrite,
+                                      chk["warnings"] + chk["accepted"])
+    if found is None:
+        return [], None  # the plan check already reports the sentence count
+    summary = {"basis": basis, "pairs": len(found), "judge": None}
+    if not found:
+        return [], summary
+    path = Path(session_dir) / _nli_name(BY_ID[pid]["artifact"])
+    if not path.is_file():
+        return [_issue("nli_file_missing", file=path.name, pairs=[p["pair"] for p in found])], summary
+    try:
+        data = json.loads(_read_text(path))
+    except json.JSONDecodeError as e:
+        return [_issue("invalid_nli", error=f"{path.name} is not valid JSON: {e}")], summary
+    errors, summary["judge"] = entailment.validate(data, found)
+    return errors, summary
+
+
 def _gate_text(session_dir, state, original, pid):
     """Gates 3–5: ``pe check`` against the original, plan adherence, sentence count, facts."""
     artifact = BY_ID[pid]["artifact"]
@@ -425,6 +494,9 @@ def _gate_text(session_dir, state, original, pid):
     if not cmp["ok"]:
         issues.append(_issue("length_target", **cmp["target"], length_ratio=cmp["length_ratio"]))
     result = {"accepted": chk["accepted"], "advisory": {"metrics": cmp, "unsupported": chk["unsupported"]}}
+    if last:
+        nli_issues, result["entailment"] = _gate_entailment(session_dir, state, pid, original, rewrite, chk)
+        issues += nli_issues
     if analysis:
         # Anchors are checked at every text gate; verdicts are required at the last one.
         report = facts.verify(original, analysis["facts"], rewrite, (verdicts or {}) if last else verdicts,
@@ -461,6 +533,8 @@ def submit(session_dir):
     entry = {"pass": pid, "gate": spec["gate"], "round": state["rounds"][pid], "ok": result["ok"],
              "issues": result["issues"], "accepted": result.get("accepted", []),
              "advisory": result.get("advisory", {})}
+    if result.get("entailment"):
+        entry["entailment"] = result["entailment"]
     _write_json(session_dir / GATES_DIR / f"{spec['gate']}-{pid}-r{entry['round']}.json", entry)
     state["history"].append(entry)
 
@@ -497,7 +571,7 @@ def rewind(session_dir, to):
     dropped = state["passes"][state["passes"].index(to):]
     for pid in dropped:
         artifact = BY_ID[pid]["artifact"]
-        for name in (artifact, _review_name(artifact)):
+        for name in (artifact, _review_name(artifact), _nli_name(artifact)):
             path = session_dir / name
             if path.is_file():
                 path.unlink()
@@ -547,8 +621,18 @@ def build_report(session_dir, state):
         "open_issues": open_issues(state),
         "accepted_warnings": [a for e in live if e["ok"] for a in e["accepted"]],
         "facts_frozen": "analysis" in state["frozen"],
+        "entailment": _entailment_report(live),
         "output": str(session_dir / OUTPUT_FILE) if state["status"] == "complete" else None,
     }
+
+
+def _entailment_report(live):
+    """Entailment summary of the latest passed gate that judged pairs, or None."""
+    for e in reversed(live):
+        if e["ok"] and e.get("entailment"):
+            # The harness cannot see who judged: "independent" is the agent's claim.
+            return dict(e["entailment"], judge_verified=False)
+    return None
 
 
 def write_report(session_dir, state=None):

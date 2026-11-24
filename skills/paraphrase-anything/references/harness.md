@@ -9,6 +9,7 @@ time, and gates each pass against the original before moving on. You never choos
 python scripts/pe.py run init input.txt --mode standard     # prints the session directory
 python scripts/pe.py run next <session-dir>                  # one task as JSON
 # ... write the file named in "output" (and "review" when needed) ...
+python scripts/pe.py run pairs <session-dir>                 # last pass: pairs to judge for entailment
 python scripts/pe.py run submit <session-dir>                # gate: 0 pass, 1 fix needed, 2 error
 # repeat next / submit until next returns {"step": "done"} or {"step": "incomplete"}
 python scripts/pe.py run report <session-dir>                # what ran, what was skipped, what is open
@@ -18,7 +19,8 @@ python scripts/pe.py run report <session-dir>                # what ran, what wa
 (default auto), `--passes` (comma list of `analysis`, `plan`, `structure`, `lexis`, `style`;
 default all five), `--max-rounds` (fix rounds per
 pass, default 2), `-o` (session directory; default a new temp directory).
-Other commands: `pe run status <session-dir>` and `pe run rewind <session-dir> --to <pass>`.
+Other commands: `pe run status <session-dir>`, `pe run rewind <session-dir> --to <pass>`, and
+`pe run pairs <session-dir>` (the entailment pairs of the last pass's current rewrite).
 
 ## The task
 
@@ -35,6 +37,7 @@ Other commands: `pe run status <session-dir>` and `pe run rewind <session-dir> -
 | `state.facts`, `state.analysis` | The frozen analysis (after pass 1). Every later gate re-checks the facts. |
 | `round`, `max_rounds`, `issues` | Fix round, limit, and what the last failed gate found. |
 | `review`, `review_required` | Optional review file for text passes; required items are listed. |
+| `entailment` | Last pass: the verdicts file to write, the pair `basis` (`plan` or `aligner`), and the format. |
 
 ## Passes
 
@@ -63,6 +66,11 @@ accepts and verdicts. When facts are frozen, the last text pass must give a verd
 ```
 
 Warning ids come from the `issues` of the previous round. Errors cannot be accepted.
+
+The last text pass also needs entailment verdicts (`p5-style.nli.json`): run `pe run pairs`
+after writing the rewrite and judge every pair in both directions, as in
+[entailment](entailment.md). The report's `entailment` field records the pair basis, the count,
+and the claimed `judge`.
 
 ## Rounds and endings
 

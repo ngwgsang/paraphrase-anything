@@ -31,7 +31,7 @@ Work from `inputs.previous`, apply only the `ops` your task lists, and write the
 - **Gate 4 (lexis):** `pe check` against the original; the sentence count equals the previous
   pass; mode bands are reported (advisory).
 - **Gate 5 (style):** `pe check` against the original; the plan's final sentence map; the length
-  target when one was set; fact verdicts.
+  target when one was set; fact verdicts; entailment verdicts per pair ([entailment](entailment.md)).
 
 ## Example (en, standard)
 

@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 import _path  # noqa: F401
+from _nli import judge_all
 from paraphrase_everything import harness, planning
 
 PLAN = {"rows": [{"src": [1], "ops": ["split", "voice"], "target": 2},
@@ -49,6 +50,12 @@ class LayeredSessionTest(unittest.TestCase):
         self.write(name, data)
         return harness.submit(self.dir)
 
+    def final(self, name, data):
+        """Write the last pass's artifact, judge its entailment pairs, and submit it."""
+        self.write(name, data)
+        judge_all(self.dir)
+        return harness.submit(self.dir)
+
     def through_plan(self, case, plan=PLAN, **kwargs):
         """Init a five-pass session and pass gates 1 and 2."""
         harness.init(case["original"], self.dir, **kwargs)
@@ -83,7 +90,7 @@ class LayeredSessionTest(unittest.TestCase):
                 self.assertEqual((task["step"], task["ops"]), ("style", ["register", "shorten", "expand"]))
                 self.assertEqual(task["plan"][0]["ops"], [])
                 self.write("p5-style.review.json", {"verdicts": [{"id": "f1", "verdict": "kept"}]})
-                result = self.submit("p5-style.txt", case["lexis"])
+                result = self.final("p5-style.txt", case["lexis"])
                 self.assertTrue(result["ok"], result["issues"])
                 report = harness.write_report(self.dir)
                 self.assertEqual(report["passes_run"], ["analysis", "plan", "structure", "lexis", "style"])
@@ -130,8 +137,8 @@ class LayeredSessionTest(unittest.TestCase):
                                        "register", "shorten", "expand"])
         self.assertEqual(task["plan"][0]["ops"], ["split", "voice"])
         self.assertEqual(len(task["duties"]), 3)
-        self.assertEqual(types(self.submit("p5-style.txt", case["original"])["issues"]), {"plan_target_mismatch"})
-        self.assertTrue(self.submit("p5-style.txt", case["lexis"])["ok"])
+        self.assertEqual(types(self.final("p5-style.txt", case["original"])["issues"]), {"plan_target_mismatch"})
+        self.assertTrue(self.final("p5-style.txt", case["lexis"])["ok"])
         report = harness.write_report(self.dir)
         self.assertEqual([g["gate"] for g in report["gates_run"]], ["g2", "g5", "g5"])
         self.assertEqual(report["gates_skipped"], ["g1", "g3", "g4"])
@@ -144,7 +151,7 @@ class LayeredSessionTest(unittest.TestCase):
         self.assertEqual((task["step"], task["merged_passes"]), ("lexis", ["structure"]))
         self.assertEqual(types(self.submit("p4-lexis.txt", case["original"])["issues"]), {"plan_target_mismatch"})
         self.assertTrue(self.submit("p4-lexis.txt", case["lexis"])["ok"])
-        self.assertTrue(self.submit("p5-style.txt", case["lexis"])["ok"])
+        self.assertTrue(self.final("p5-style.txt", case["lexis"])["ok"])
 
     def test_drop_rows_count_once_until_the_shorten_pass(self):
         original = "Revenue rose 12% this year. This is a very pleasing result for everyone involved."
@@ -157,8 +164,8 @@ class LayeredSessionTest(unittest.TestCase):
         lexis = "Revenue grew 12% this year. This is a very pleasing result for everyone involved."
         self.assertTrue(self.submit("p4-lexis.txt", lexis)["ok"])
         self.assertEqual(harness.next_task(self.dir)["plan"][1]["target"], 0)
-        self.assertEqual(types(self.submit("p5-style.txt", lexis)["issues"]), {"plan_target_mismatch"})
-        result = self.submit("p5-style.txt", "Revenue grew 12% this year.")
+        self.assertEqual(types(self.final("p5-style.txt", lexis)["issues"]), {"plan_target_mismatch"})
+        result = self.final("p5-style.txt", "Revenue grew 12% this year.")
         self.assertEqual(types(result["issues"]), {"sentence_unaligned"})  # check still flags the drop
         self.write("p5-style.review.json", {"accept": [{"id": "w1", "reason": "planned drop in shorten mode"}]})
         self.assertTrue(harness.submit(self.dir)["ok"])
@@ -177,8 +184,8 @@ class LayeredSessionTest(unittest.TestCase):
         self.assertIn("placeholder_duplicated", types(self.submit("p3-structure.txt", good + " ⟦P1⟧")["issues"]))
         self.assertTrue(self.submit("p3-structure.txt", good)["ok"])
         self.assertTrue(harness.next_task(self.dir)["inputs"]["previous"].endswith("p3-structure.txt"))
-        self.assertIn("placeholder_unknown", types(self.submit("p5-style.txt", good + " ⟦P9⟧")["issues"]))
-        self.assertTrue(self.submit("p5-style.txt", good)["ok"])
+        self.assertIn("placeholder_unknown", types(self.final("p5-style.txt", good + " ⟦P9⟧")["issues"]))
+        self.assertTrue(self.final("p5-style.txt", good)["ok"])
         self.assertEqual((self.dir / "output.txt").read_text(encoding="utf-8"),
                          "Run `make test` before you push, then open https://example.com/ci to watch the build.")
 

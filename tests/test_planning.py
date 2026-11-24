@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 import _path  # noqa: F401
+from _nli import judge_all
 from paraphrase_everything import harness, planning
 
 REFERENCES = Path(_path.SCRIPTS).parent / "references"
@@ -209,10 +210,13 @@ class HarnessGatesTest(unittest.TestCase):
         masked = (self.dir / "masked.txt").read_text(encoding="utf-8")
         self.assertTrue(masked.startswith("⟦P1⟧ closed in May."))
         self.write("p5-style.txt", "⟦P1⟧ shut in May, so Route 9 saw twice the traffic.")
+        judge_all(self.dir)
         self.assertEqual(types(harness.submit(self.dir)["issues"]), {"length_target"})
         self.write("p5-style.txt", "A bridge shut in May. Route 9 traffic doubled.")
+        judge_all(self.dir)
         self.assertTrue({"placeholder_missing", "protected_span_missing"} <= types(harness.submit(self.dir)["issues"]))
         self.write("p5-style.txt", "⟦P1⟧ shut in May; Route 9 traffic doubled.")
+        judge_all(self.dir)
         result = harness.submit(self.dir)
         self.assertTrue(result["ok"], result["issues"])
         self.assertEqual((self.dir / "output.txt").read_text(encoding="utf-8"),

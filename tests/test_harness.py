@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 import _path  # noqa: F401
+from _nli import judge_all
 from paraphrase_everything import harness
 
 PE = Path(_path.SCRIPTS) / "pe.py"
@@ -81,6 +82,7 @@ class SessionTest(unittest.TestCase):
                 self.assertTrue(any(p.endswith(f"{code}.md") for p in task["instructions"]))
                 self.write("p5-style.txt", case["good"])
                 self.write("p5-style.review.json", self.kept(case))
+                judge_all(self.dir)
                 result = harness.submit(self.dir)
                 self.assertTrue(result["ok"], result["issues"])
                 self.assertEqual(result["status"], "complete")
@@ -112,6 +114,7 @@ class SessionTest(unittest.TestCase):
         types = {i["type"] for i in task["issues"]}
         self.assertTrue({"number_missing", "number_extra", "anchor_missing"} <= types, types)
         self.write("p5-style.txt", case["good"])
+        judge_all(self.dir)
         self.assertTrue(harness.submit(self.dir)["ok"])
 
     def test_round_exhaustion_ends_incomplete(self):
@@ -135,12 +138,14 @@ class SessionTest(unittest.TestCase):
         case = self.start()
         self.analyse(case)
         self.write("p5-style.txt", case["good"])
+        judge_all(self.dir)
         issues = harness.submit(self.dir)["issues"]
         self.assertEqual(issues, [{"type": "verdict_missing", "id": "f1"}])
 
     def test_accepted_warning_is_reported(self):
         harness.init("It is not uncommon for builds to fail.", self.dir, passes="style")
         self.write("p5-style.txt", "Builds commonly fail.")
+        judge_all(self.dir)
         result = harness.submit(self.dir)
         self.assertEqual([i["type"] for i in result["issues"]], ["negation_mismatch"])
         self.write("p5-style.review.json", {"accept": [{"id": "w1", "reason": "double negative made positive"}]})
@@ -254,6 +259,13 @@ class CliTest(unittest.TestCase):
             (session / "p5-style.txt").write_text(case["good"], encoding="utf-8")
             (session / "p5-style.review.json").write_text(
                 json.dumps({"verdicts": [{"id": "f1", "verdict": "kept"}]}), encoding="utf-8")
+            self.assertEqual(self.pe("run", "submit", str(session))[0], 1)  # no entailment verdicts
+            code, found = self.pe("run", "pairs", str(session))
+            self.assertEqual((code, found["basis"], [p["pair"] for p in found["pairs"]]), (0, "aligner", ["a1", "a2"]))
+            Path(found["file"]).write_text(json.dumps({"pairs": [
+                {"pair": p["pair"], "forward": "entail", "backward": "entail",
+                 "evidence": {"src": p["original"], "rew": p["rewritten"]}, "reason": "checked"}
+                for p in found["pairs"]]}), encoding="utf-8")
             self.assertEqual(self.pe("run", "submit", str(session))[0], 0)
             code, report = self.pe("run", "report", str(session))
             self.assertEqual((code, report["status"]), (0, "complete"))
