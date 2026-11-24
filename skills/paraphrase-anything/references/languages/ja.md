@@ -1,5 +1,6 @@
 # Japanese notes
 
+- **Table headers:** 元の表現 · 言い換え後 · 変更の種類
 - **Style consistency:** keep one style throughout: です・ます調 (polite) or だ・である調 (plain).
   Do not switch style unless the requested tone asks for it (formal → です・ます or である;
   casual → だ/plain).

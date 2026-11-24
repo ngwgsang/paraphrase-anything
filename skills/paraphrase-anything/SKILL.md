@@ -32,8 +32,8 @@ Save the user's text **verbatim** to a temp file (outside the user's project), e
 | tone / persona | none | any file in [personas](references/personas/) (list the folder); apply within the chosen mode |
 
 Load only what you need: [modes](references/modes.md), the one persona file requested, [variants](references/variants.md), [preservation rules](references/preservation.md), [response format](references/response.md), [key facts](references/facts.md),
-and the language note for the input language: [en](references/languages/en.md),
-[vi](references/languages/vi.md), [ja](references/languages/ja.md).
+and the language note for the input language, `references/languages/<code>.md` (any file in
+[languages](references/languages/); `pe detect` gives the code, `pe langs` lists installed packs).
 
 ### 3. Extract key facts (long or high-stakes text)
 If the text is over ~150 words, or the user wants strict or exact meaning, list the 3–8 facts

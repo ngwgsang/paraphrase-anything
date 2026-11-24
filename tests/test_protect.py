@@ -119,7 +119,7 @@ class CliTest(unittest.TestCase):
     def test_detect_and_langs(self):
         self.assertEqual(self.run_pe("detect", "--text", "Xin chào các bạn")[1]["lang"], "vi")
         codes = [l["code"] for l in self.run_pe("langs")[1]["langs"]]
-        self.assertEqual(codes, ["en", "ja", "vi"])
+        self.assertTrue({"en", "ja", "vi", "zh"} <= set(codes))
 
 
 if __name__ == "__main__":

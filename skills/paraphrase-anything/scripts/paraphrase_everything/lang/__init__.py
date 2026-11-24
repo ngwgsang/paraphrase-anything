@@ -1,7 +1,7 @@
-"""Language data loader.
+"""Language data loader and detector.
 
-All language-specific literals live in ``<code>.json`` next to this file.
-Code must never hard-code them (story 012, phase 1).
+All language-specific literals live in ``<code>.json`` next to this file, including how to
+detect the language (``detect``). Code must never hard-code them (story 012).
 """
 
 import json
@@ -13,17 +13,15 @@ from pathlib import Path
 LANG_DIR = Path(__file__).parent
 DEFAULT = "default"
 
-_KANA = re.compile(r"[぀-ヿ]")
-_CJK = re.compile(r"[぀-ヿ一-鿿]")
-# Letters specific to Vietnamese, plus precomposed tone-marked vowels.
-_VI = re.compile(r"[ăâđêôơưĂÂĐÊÔƠƯẠ-ỹ]")
-_LATIN = re.compile(r"[A-Za-z]")
+_LETTER = re.compile(r"[^\W\d_]")
+# Latin script (basic, Latin-1, Extended-A/B, Extended Additional); a script range, not a language.
+_LATIN = re.compile(r"[A-Za-zÀ-ÖØ-öø-ɏḀ-ỿ]")
 _WORD = re.compile(r"[^\W\d_]+")
 
 
-def available():
+def available(lang_dir=LANG_DIR):
     """Codes of all installed languages, excluding the generic fallback."""
-    return sorted(p.stem for p in LANG_DIR.glob("*.json") if p.stem != DEFAULT)
+    return sorted(p.stem for p in Path(lang_dir).glob("*.json") if p.stem != DEFAULT)
 
 
 @lru_cache(maxsize=None)
@@ -47,20 +45,42 @@ def load(code):
     return data
 
 
+@lru_cache(maxsize=None)
+def _detectors():
+    """Script detectors from every pack's ``detect`` block, highest priority first."""
+    found = []
+    for code in available():
+        rule = load(code).get("detect", {})
+        if rule.get("script"):
+            found.append((rule.get("priority", 0), code, re.compile(rule["script"]),
+                          rule.get("min_share", 0)))
+    return [(code, script, share) for _, code, script, share in sorted(found, key=lambda f: (-f[0], f[1]))]
+
+
+def _latin_fallback():
+    """The pack that Latin text without word evidence falls back to, or None."""
+    return next((c for c in available() if load(c).get("detect", {}).get("latin_fallback")), None)
+
+
 def detect(text):
-    """Best-effort script-based detection; returns a language code or DEFAULT."""
-    if _KANA.search(text):
-        return "ja"
-    cjk = len(_CJK.findall(text))
+    """Best-effort detection from the packs' data; returns a language code or DEFAULT.
+
+    1. Script rules (``detect.script``), by ``priority``: the first pack whose script occurs at
+       least ``min_share`` times the number of Latin letters wins.
+    2. Text dominated by a non-Latin script that no pack claims is DEFAULT.
+    3. Latin text: the pack whose ``detect_words`` occur most often; ties and zero scores go
+       to the ``latin_fallback`` pack.
+    """
     latin = len(_LATIN.findall(text))
-    if cjk and cjk >= latin:
-        return DEFAULT  # Han-only text: could be zh or ja; no pack decides yet.
-    if _VI.search(text):
-        return "vi"
-    if not latin:
+    for code, script, share in _detectors():
+        hits = len(script.findall(text))
+        if hits and hits >= share * latin:
+            return code
+    letters = len(_LETTER.findall(text))
+    if not latin or letters - latin >= latin:
         return DEFAULT
-    # Latin script without distinctive letters: score each pack's common words.
+    fallback = _latin_fallback()
     words = Counter(_WORD.findall(text.lower()))
     scores = {code: sum(words[w] for w in load(code)["detect_words"]) for code in available()}
-    best = max(scores, key=lambda c: (scores[c], c == "en"))
-    return best if scores[best] else "en"
+    best = max(scores, key=lambda c: (scores[c], c == fallback)) if scores else None
+    return best if best and scores[best] else fallback or DEFAULT

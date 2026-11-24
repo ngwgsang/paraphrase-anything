@@ -1,5 +1,6 @@
 # English notes
 
+- **Table headers:** Original · Rewritten · Change
 - **Contractions:** formal → expand ("do not"); casual → contract. Keep the user's choice in light mode.
 - **Hedges matter:** "may", "might", "likely", "approximately", "suggests" carry certainty;
   keep the same strength. "X suggests Y" must not become "X proves Y".

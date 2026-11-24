@@ -1,5 +1,6 @@
 # Vietnamese notes
 
+- **Table headers:** Bản gốc · Đã đổi thành · Loại thay đổi
 - **Xưng hô (pronouns):** keep the original's pronoun pair (tôi/bạn, em/anh, chúng tôi/quý khách).
   Change it only if the requested tone requires (formal → "quý vị", casual → "mình/bạn").
 - **Register:** formal writing prefers Sino-Vietnamese vocabulary (thực hiện, triển khai);

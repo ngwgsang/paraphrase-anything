@@ -87,5 +87,29 @@
     "unlock the potential",
     "plays a crucial role",
     "tapestry"
-  ]
+  ],
+  "detect": {
+    "latin_fallback": true
+  },
+  "fixtures": {
+    "detect": [
+      "The quick brown fox jumps over the lazy dog.",
+      "Please review the attached report before the meeting."
+    ],
+    "sentences": [
+      {
+        "text": "Dr. Smith arrived at 5 p.m. He left early, e.g. before dinner. Did he?",
+        "count": 3
+      }
+    ],
+    "negation": [
+      "It does not work.",
+      "We can't go.",
+      "Nobody came."
+    ],
+    "hedge": [
+      "It may rain tomorrow.",
+      "The study suggests a link."
+    ]
+  }
 }

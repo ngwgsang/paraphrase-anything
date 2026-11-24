@@ -88,8 +88,10 @@ class ResponseDocTest(unittest.TestCase):
         self.assertIn("own `text` block", self.doc)
 
     def test_every_language_has_header_labels(self):
+        self.assertIn("**Table headers**", self.doc)
         for code in lang.available():
-            self.assertRegex(self.doc, rf"(?m)^\| {code} \|", f"no header labels for {code}")
+            note = (SKILL_DIR / "references" / "languages" / f"{code}.md").read_text(encoding="utf-8")
+            self.assertRegex(note, r"(?m)^- \*\*Table headers:\*\* [^·\n]+ · [^·\n]+ · [^·\n]+$", code)
 
 
 class ModesDocTest(unittest.TestCase):

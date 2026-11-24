@@ -9,6 +9,7 @@ import sys
 
 from . import __version__, check, chunk, facts, glossary, lang, metrics, protect
 from . import io as formats
+from .lang import pack
 
 EXIT_OK, EXIT_ISSUES, EXIT_ERROR = 0, 1, 2
 
@@ -292,9 +293,25 @@ def cmd_detect(args):
 
 
 def cmd_langs(args):
-    """List installed language data."""
-    langs = [{"code": c, "name": lang.load(c)["name"]} for c in lang.available()]
-    return {"ok": True, "langs": langs}, EXIT_OK
+    """List installed language packs with their tier, supported checks, and open problems."""
+    langs = pack.coverage_table()
+    ok = not any(row["problems"] for row in langs)
+    return {"ok": ok, "langs": langs}, EXIT_OK if ok else EXIT_ISSUES
+
+
+def cmd_lang(args):
+    """Scaffold a new language pack (``pe lang new <code>``)."""
+    try:
+        created = pack.scaffold(args.code, args.name or args.code, skill_dir=args.skill_dir or pack.SKILL_DIR,
+                                length_unit=args.unit)
+    except (ValueError, FileExistsError) as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
+    return {"ok": True, "created": created, "tier": 0, "next": [
+        "fill in markers, terminators, separators, and the detect block in the data file",
+        "add fixtures (detect, sentences, negation, hedge) until `pe langs` shows no problems",
+        "complete the TODO lines of the language note",
+        f"for tier 2, add at least {pack.EVAL_CASES_FOR_TIER_2} eval cases in evals/cases/{args.code}/",
+    ]}, EXIT_OK
 
 
 def build_parser():
@@ -407,8 +424,17 @@ def build_parser():
     _add_input(p)
     p.set_defaults(func=cmd_detect)
 
-    p = sub.add_parser("langs", help="list installed language data")
+    p = sub.add_parser("langs", help="list installed language packs: tier, checks, problems")
     p.set_defaults(func=cmd_langs)
+
+    p = sub.add_parser("lang", help="manage language packs: 'pe lang new <code>' scaffolds one")
+    p.add_argument("action", choices=["new"], help="what to do")
+    p.add_argument("code", help="language code, e.g. ko or pt-br")
+    p.add_argument("--name", help="display name of the language (default: the code)")
+    p.add_argument("--unit", choices=["word", "char"], default="word",
+                   help="length unit: word for space-separated scripts, char otherwise (default: %(default)s)")
+    p.add_argument("--skill-dir", help="skill folder to write into (default: this skill)")
+    p.set_defaults(func=cmd_lang)
     return parser
 
 

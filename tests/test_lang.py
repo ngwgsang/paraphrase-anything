@@ -13,7 +13,7 @@ REQUIRED_KEYS = {
 
 class LangDataTest(unittest.TestCase):
     def test_available(self):
-        self.assertEqual(lang.available(), ["en", "ja", "vi"])
+        self.assertTrue({"en", "ja", "vi", "zh"} <= set(lang.available()))
 
     def test_every_pack_has_required_keys(self):
         for code in lang.available() + [lang.DEFAULT]:
@@ -46,7 +46,10 @@ class DetectTest(unittest.TestCase):
         self.assertEqual(lang.detect("The quick brown fox."), "en")
         self.assertEqual(lang.detect("Hôm nay trời đẹp quá."), "vi")
         self.assertEqual(lang.detect("今日はいい天気ですね。"), "ja")
-        self.assertEqual(lang.detect("今天天气很好"), lang.DEFAULT)
+        self.assertEqual(lang.detect("今天天气很好"), "zh")
+        self.assertEqual(lang.detect("東京都の天気は晴れです。"), "ja")  # kana outranks Han
+        self.assertEqual(lang.detect("Привет, как дела?"), lang.DEFAULT)  # no pack claims Cyrillic
+        self.assertEqual(lang.detect("The word 今天 means today."), "en")
         self.assertEqual(lang.detect("12345"), lang.DEFAULT)
 
 

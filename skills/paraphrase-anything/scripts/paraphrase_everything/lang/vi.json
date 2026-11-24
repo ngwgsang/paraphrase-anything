@@ -81,5 +81,30 @@
     "trong thời đại ngày nay",
     "có thể nói rằng",
     "một cách hiệu quả"
-  ]
+  ],
+  "detect": {
+    "script": "[ăâđêôơưĂÂĐÊÔƠƯẠ-ỹ]",
+    "priority": 10,
+    "min_share": 0
+  },
+  "fixtures": {
+    "detect": [
+      "Hôm nay trời đẹp quá.",
+      "Chúng tôi sẽ gửi báo cáo vào thứ Hai."
+    ],
+    "sentences": [
+      {
+        "text": "TP. Hồ Chí Minh rất đông. Tôi thích nơi này!",
+        "count": 2
+      }
+    ],
+    "negation": [
+      "Tôi không đi.",
+      "Anh ấy chưa từng đến đây."
+    ],
+    "hedge": [
+      "Có lẽ trời sẽ mưa.",
+      "Dường như anh ấy đã biết."
+    ]
+  }
 }

@@ -1,0 +1,64 @@
+{
+  "code": "zh",
+  "name": "中文（简体）",
+  "length_unit": "char",
+  "match": "substring",
+  "has_case": false,
+  "detect_words": [],
+  "sentence_terminators": [
+    "。",
+    "！",
+    "？",
+    "；",
+    "!",
+    "?"
+  ],
+  "abbreviations": [],
+  "negation_markers": [
+    "不",
+    "没",
+    "未",
+    "无",
+    "别",
+    "勿"
+  ],
+  "hedge_markers": [
+    "可能",
+    "也许",
+    "或许",
+    "大概",
+    "似乎",
+    "好像",
+    "估计",
+    "恐怕",
+    "大约"
+  ],
+  "decimal_separator": ".",
+  "thousands_separator": ",",
+  "cliches": [
+    "在当今社会",
+    "发挥着重要作用",
+    "不言而喻",
+    "众所周知",
+    "随着时代的发展"
+  ],
+  "subtitle": {"max_line_chars": 16, "max_cps": 9},
+  "detect": {"script": "[一-鿿]", "priority": 20, "min_share": 1},
+  "fixtures": {
+    "detect": [
+      "今天天气很好。",
+      "研究人员在2024年发表了这项成果。"
+    ],
+    "sentences": [
+      {"text": "会议推迟了。你知道吗？我们明天再谈！", "count": 3}
+    ],
+    "negation": [
+      "他今天不来。",
+      "我还没吃饭。"
+    ],
+    "hedge": [
+      "明天可能会下雨。",
+      "他似乎已经知道了。"
+    ]
+  }
+}

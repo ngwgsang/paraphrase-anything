@@ -48,13 +48,9 @@ Rules:
 - Very short input (one sentence): a table of 1–3 rows is fine; do not pad it.
 - When the result is written to a file, show the table in the chat, not in the file.
 
-Header labels:
-
-| Language | Original | Rewritten | Change |
-|----------|----------|-----------|--------|
-| en | Original | Rewritten | Change |
-| vi | Bản gốc | Đã đổi thành | Loại thay đổi |
-| ja | 元の表現 | 言い換え後 | 変更の種類 |
+Header labels: use the **Table headers** line of the language note
+(`references/languages/<code>.md`). For a language without a note, translate
+"Original · Rewritten · Change".
 
 ## Variants
 

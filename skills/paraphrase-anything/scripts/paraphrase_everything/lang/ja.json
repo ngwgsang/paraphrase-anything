@@ -42,5 +42,30 @@
     "重要な役割を果たす",
     "今日の社会において"
   ],
-  "subtitle": {"max_line_chars": 13, "max_cps": 4}
+  "subtitle": {"max_line_chars": 13, "max_cps": 4},
+  "detect": {
+    "script": "[぀-ヿ]",
+    "priority": 30,
+    "min_share": 0
+  },
+  "fixtures": {
+    "detect": [
+      "今日はいい天気ですね。",
+      "東京都知事選挙の結果が発表された。"
+    ],
+    "sentences": [
+      {
+        "text": "雨が降った。傘を持っていますか？はい！",
+        "count": 3
+      }
+    ],
+    "negation": [
+      "今日は行かない。",
+      "まだ食べていません。"
+    ],
+    "hedge": [
+      "明日は雨かもしれない。",
+      "増加する可能性がある。"
+    ]
+  }
 }

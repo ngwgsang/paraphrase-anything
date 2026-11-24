@@ -22,7 +22,7 @@ skills/paraphrase-anything/
         ├── metrics.py            # divergence, length, pairwise variant metrics
         ├── modes.json            # advisory bands per mode
         ├── text.py               # sentence splitting, marker matching
-        └── lang/                 # <code>.json language data + loader
+        └── lang/                 # <code>.json language data, loader, pack contract (pack.py)
 tests/                            # unittest suite
 .dev/docs/                        # local-only stories and roadmap (git-ignored)
 ```
@@ -59,7 +59,9 @@ python skills/paraphrase-anything/scripts/pe.py --help  # CLI help
 - Match the surrounding style: comments only where the reason is not obvious.
 - Every change ships with tests, including vi / en / ja cases where language matters.
 - When changing CLI flags or `modes.json`, update `SKILL.md` and `references/`; `tests/test_skill.py` fails on drift.
-- Adding a language requires `references/languages/<code>.md`.
+- Adding a language is data only: `pe lang new <code>`, then fill `lang/<code>.json` (including
+  fixtures) and `references/languages/<code>.md` until `pe langs` shows tier 1. Core code must not
+  name a language code; a test enforces this. See `lang/README.md`.
 
 ## Documentation
 

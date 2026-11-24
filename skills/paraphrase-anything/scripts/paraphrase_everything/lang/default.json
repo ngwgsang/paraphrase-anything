@@ -19,5 +19,6 @@
   "decimal_separator": ".",
   "thousands_separator": ",",
   "cliches": [],
-  "subtitle": {"max_line_chars": 42, "max_cps": 17}
+  "subtitle": {"max_line_chars": 42, "max_cps": 17},
+  "detect": {}
 }

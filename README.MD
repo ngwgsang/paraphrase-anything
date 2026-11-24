@@ -73,7 +73,8 @@ python skills/paraphrase-anything/scripts/pe.py restore masked-rewrite.txt --map
 - [Variant Diversity Guide](skills/paraphrase-anything/references/variants.md) — The 5 axes of variation (Structure, Register, Concision, Voice, Vocabulary).
 - [Key Facts](skills/paraphrase-anything/references/facts.md) — Extract a short fact checklist before rewriting and verify the rewrite against it (`pe facts`).
 - [Preservation Rules](skills/paraphrase-anything/references/preservation.md) — Invariants that must never change.
-- Language Notes: [English](skills/paraphrase-anything/references/languages/en.md), [Vietnamese](skills/paraphrase-anything/references/languages/vi.md), [Japanese](skills/paraphrase-anything/references/languages/ja.md).
+- Language Notes: [English](skills/paraphrase-anything/references/languages/en.md), [Vietnamese](skills/paraphrase-anything/references/languages/vi.md), [Japanese](skills/paraphrase-anything/references/languages/ja.md), [Chinese](skills/paraphrase-anything/references/languages/zh.md).
+- [Language Packs](skills/paraphrase-anything/scripts/paraphrase_everything/lang/README.md) — Add a language with data files only (`pe lang new`, tiers, fixtures).
 
 ## Star History
 
