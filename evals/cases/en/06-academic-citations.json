@@ -1,0 +1,22 @@
+{
+  "id": "en-06-academic-citations",
+  "lang": "en",
+  "category": "academic",
+  "mode": "standard",
+  "format": "raw",
+  "input": "Sleep deprivation impairs working memory [1], and chronic loss of more than 2 hours per night raises the risk of hypertension (Walker, 2017).",
+  "rewrite": "Working memory suffers when people are deprived of sleep [1]; losing over 2 hours of sleep nightly on a chronic basis also increases the likelihood of hypertension (Walker, 2017).",
+  "expected_invariants": {
+    "numbers": [
+      "2"
+    ],
+    "terms": [
+      "[1]",
+      "(Walker, 2017)"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

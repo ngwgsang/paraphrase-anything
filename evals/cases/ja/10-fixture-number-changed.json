@@ -1,0 +1,16 @@
+{
+  "id": "ja-10-fixture-number-changed",
+  "lang": "ja",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "True positive: a changed number is an error.",
+  "input": "工事は2027年3月に完了し、総額は80億円となる。",
+  "rewrite": "総工費85億円をかけた工事は、2027年3月に終わる予定だ。",
+  "expect": {
+    "ok": false,
+    "errors": [
+      "number_extra",
+      "number_missing"
+    ]
+  }
+}

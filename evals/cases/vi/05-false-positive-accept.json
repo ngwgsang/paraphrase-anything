@@ -1,0 +1,24 @@
+{
+  "id": "vi-05-false-positive-accept",
+  "lang": "vi",
+  "category": "accept_warning",
+  "mode": "standard",
+  "format": "raw",
+  "input": "Đợt bảo trì không gây gián đoạn cho 3 trung tâm dữ liệu.",
+  "rewrite": "Cả 3 trung tâm dữ liệu đều vận hành liên tục trong đợt bảo trì.",
+  "accept": [
+    {
+      "id": "w1",
+      "reason": "antonym rewrite: 'không gây gián đoạn' becomes 'vận hành liên tục'"
+    }
+  ],
+  "expected_invariants": {
+    "numbers": [
+      "3"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "ja-08-markdown-doc",
+  "lang": "ja",
+  "category": "format",
+  "mode": "standard",
+  "format": "markdown",
+  "input": "# 導入ガイド\n\nこのツールはPython 3.9以上で動作します。\n\n1. リポジトリをクローンします。\n2. `pe.py --help` を実行して確認します。\n\n```\npython pe.py --help\n```\n",
+  "segments": {
+    "2": "本ツールの動作にはPython 3.9以降が必要です。",
+    "3": "最初にリポジトリを手元へクローンしてください。",
+    "4": "確認のため `pe.py --help` を実行します。"
+  },
+  "expected_invariants": {
+    "code": [
+      "`pe.py --help`",
+      "```\npython pe.py --help\n```"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

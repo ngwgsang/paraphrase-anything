@@ -1,0 +1,8 @@
+{
+  "min_pass_rate": 1.0,
+  "min_check_pass_rate": 1.0,
+  "max_accepted_warning_rate": 0.3,
+  "max_variant_overlap": 0.35,
+  "min_trigger_accuracy": 1.0,
+  "min_fixture_accuracy": 1.0
+}

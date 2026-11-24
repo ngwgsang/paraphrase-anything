@@ -1,0 +1,23 @@
+{
+  "id": "ja-06-academic-citations",
+  "lang": "ja",
+  "category": "academic",
+  "mode": "standard",
+  "format": "raw",
+  "input": "睡眠時間が6時間未満の被験者は、集中力が20%低下した[3]。この傾向は先行研究とも一致する(田中, 2019)。",
+  "rewrite": "睡眠が6時間を下回った被験者では、集中力に20%の落ち込みが見られた[3]。同様の結果は既存の研究でも報告されている(田中, 2019)。",
+  "expected_invariants": {
+    "numbers": [
+      "6",
+      "20%"
+    ],
+    "terms": [
+      "[3]",
+      "(田中, 2019)"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "en-10-fixture-merged-sentences",
+  "lang": "en",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "Two sentences merged into one must align without warnings.",
+  "input": "The library opens at 8 a.m. It closes at 9 p.m. on weekdays. Members can borrow 10 books.",
+  "rewrite": "On weekdays the library is open from 8 a.m. until 9 p.m. Members can borrow 10 books.",
+  "expect": {
+    "ok": true,
+    "errors": [],
+    "warnings": []
+  }
+}

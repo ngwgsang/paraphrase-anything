@@ -1,0 +1,22 @@
+{
+  "id": "vi-06-academic-citations",
+  "lang": "vi",
+  "category": "academic",
+  "mode": "standard",
+  "format": "raw",
+  "input": "Nghiên cứu cho thấy 60% sinh viên học tốt hơn khi ngủ đủ giấc (Nguyễn, 2021), phù hợp với các kết quả trước đó [2].",
+  "rewrite": "Theo nghiên cứu, khi được ngủ đủ, 60% sinh viên đạt kết quả học tập cao hơn (Nguyễn, 2021), điều này khớp với những phát hiện đã công bố [2].",
+  "expected_invariants": {
+    "numbers": [
+      "60%"
+    ],
+    "terms": [
+      "(Nguyễn, 2021)",
+      "[2]"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

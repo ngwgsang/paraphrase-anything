@@ -1,0 +1,14 @@
+{
+  "id": "vi-09-fixture-merged-sentences",
+  "lang": "vi",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "Two sentences merged into one must align without warnings.",
+  "input": "Cửa hàng mở lúc 7 giờ. Cửa hàng đóng lúc 22 giờ. Mỗi khách được giảm 10%.",
+  "rewrite": "Cửa hàng hoạt động từ 7 giờ đến 22 giờ. Mỗi khách được giảm 10%.",
+  "expect": {
+    "ok": true,
+    "errors": [],
+    "warnings": []
+  }
+}

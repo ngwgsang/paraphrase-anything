@@ -1,0 +1,27 @@
+{
+  "id": "en-08-markdown-doc",
+  "lang": "en",
+  "category": "format",
+  "mode": "standard",
+  "format": "markdown",
+  "input": "---\ntitle: Release notes\n---\n\n# Release 2.4\n\nThis release adds offline mode and fixes 12 bugs reported by users.\n\n- Sync now runs every 30 seconds.\n- Run `app sync --force` to resync manually.\n\n```bash\napp sync --force\n```\n",
+  "segments": {
+    "2": "Offline mode arrives in this version, along with fixes for 12 user-reported bugs.",
+    "3": "Syncing now happens at 30-second intervals.",
+    "4": "To resync by hand, use `app sync --force`."
+  },
+  "expected_invariants": {
+    "code": [
+      "`app sync --force`",
+      "```bash\napp sync --force\n```"
+    ],
+    "terms": [
+      "title: Release notes",
+      "# Release 2.4"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

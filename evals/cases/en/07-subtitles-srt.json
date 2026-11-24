@@ -1,0 +1,23 @@
+{
+  "id": "en-07-subtitles-srt",
+  "lang": "en",
+  "category": "format",
+  "mode": "standard",
+  "format": "srt",
+  "input": "1\n00:00:01,000 --> 00:00:04,000\nWelcome back to the channel.\n\n2\n00:00:04,500 --> 00:00:08,000\nToday we test 3 budget laptops\nunder $500.\n\n3\n00:00:08,500 --> 00:00:11,000\nLet's get started.\n",
+  "segments": {
+    "1": "Good to see you here again.",
+    "2": "In this video, we put 3 cheap laptops\nunder $500 to the test.",
+    "3": "Let's dive in."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "00:00:04,500 --> 00:00:08,000",
+      "$500"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

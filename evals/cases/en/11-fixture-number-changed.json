@@ -1,0 +1,16 @@
+{
+  "id": "en-11-fixture-number-changed",
+  "lang": "en",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "True positive: a changed number is an error.",
+  "input": "The council approved a budget of 4.2 million dollars for 2026.",
+  "rewrite": "For 2026, the council signed off on a 4.5 million dollar budget.",
+  "expect": {
+    "ok": false,
+    "errors": [
+      "number_extra",
+      "number_missing"
+    ]
+  }
+}

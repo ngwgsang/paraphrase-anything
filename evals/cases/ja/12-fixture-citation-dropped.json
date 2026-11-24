@@ -1,0 +1,15 @@
+{
+  "id": "ja-12-fixture-citation-dropped",
+  "lang": "ja",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "True positive: a dropped citation is an error.",
+  "input": "この手法は精度を15%向上させた[4]。",
+  "rewrite": "この手法によって精度は15%改善した。",
+  "expect": {
+    "ok": false,
+    "errors": [
+      "citation_missing"
+    ]
+  }
+}

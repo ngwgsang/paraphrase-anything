@@ -1,0 +1,24 @@
+{
+  "id": "ja-05-false-positive-accept",
+  "lang": "ja",
+  "category": "accept_warning",
+  "mode": "standard",
+  "format": "raw",
+  "input": "今回の更新で、3台のサーバーに障害は発生しなかった。",
+  "rewrite": "今回の更新では、3台のサーバーすべてが問題なく稼働を続けた。",
+  "accept": [
+    {
+      "id": "w1",
+      "reason": "antonym rewrite: 発生しなかった becomes 問題なく稼働を続けた"
+    }
+  ],
+  "expected_invariants": {
+    "numbers": [
+      "3"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

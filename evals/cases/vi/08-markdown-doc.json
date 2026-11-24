@@ -1,0 +1,24 @@
+{
+  "id": "vi-08-markdown-doc",
+  "lang": "vi",
+  "category": "format",
+  "mode": "standard",
+  "format": "markdown",
+  "input": "# Hướng dẫn cài đặt\n\nBạn cần Python 3.9 trở lên để chạy công cụ này.\n\n> Lưu ý: lệnh `pe.py check` chỉ đọc tệp, không ghi đè.\n\n| Lệnh | Mô tả |\n|------|-------|\n| check | kiểm tra |\n",
+  "segments": {
+    "2": "Để sử dụng công cụ, máy của bạn phải có Python 3.9 hoặc mới hơn.",
+    "3": "Lưu ý: `pe.py check` chỉ đọc dữ liệu, không bao giờ ghi đè tệp."
+  },
+  "expected_invariants": {
+    "code": [
+      "`pe.py check`"
+    ],
+    "terms": [
+      "| check | kiểm tra |"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "vi-12-fixture-sentence-omitted",
+  "lang": "vi",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "True positive: an omitted sentence is flagged.",
+  "input": "Hợp đồng có hiệu lực từ tháng 3. Bên B phải thanh toán trước ngày 15 hằng tháng. Mọi tranh chấp được giải quyết tại tòa án Hà Nội.",
+  "rewrite": "Hợp đồng bắt đầu có hiệu lực từ tháng 3. Bên B thanh toán trước ngày 15 mỗi tháng.",
+  "expect": {
+    "ok": false,
+    "errors": [],
+    "warnings": [
+      "proper_noun_missing",
+      "sentence_unaligned"
+    ]
+  }
+}

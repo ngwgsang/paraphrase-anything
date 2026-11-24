@@ -1,0 +1,18 @@
+{
+  "id": "en-13-light-mode",
+  "lang": "en",
+  "category": "prose",
+  "mode": "light",
+  "format": "raw",
+  "input": "Our team will review your application and reply within 5 business days.",
+  "rewrite": "Our team will review your request and respond within 5 business days.",
+  "expected_invariants": {
+    "numbers": [
+      "5"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

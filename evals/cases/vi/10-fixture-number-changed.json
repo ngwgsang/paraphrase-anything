@@ -1,0 +1,16 @@
+{
+  "id": "vi-10-fixture-number-changed",
+  "lang": "vi",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "True positive: a changed number is an error.",
+  "input": "Dự án cần 120 tỷ đồng và hoàn thành trong 18 tháng.",
+  "rewrite": "Dự án cần 150 tỷ đồng và sẽ xong trong 18 tháng.",
+  "expect": {
+    "ok": false,
+    "errors": [
+      "number_extra",
+      "number_missing"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "en-09-fixture-antonym",
+  "lang": "en",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "Known false positive: a correct antonym rewrite drops the negation marker.",
+  "input": "The migration did not fail on any of the 4 servers.",
+  "rewrite": "The migration succeeded on all 4 servers.",
+  "expect": {
+    "ok": false,
+    "errors": [],
+    "warnings": [
+      "negation_mismatch"
+    ]
+  }
+}

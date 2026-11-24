@@ -1,0 +1,16 @@
+{
+  "id": "en-12-fixture-negation-dropped",
+  "lang": "en",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "True positive: dropping a negation flips the meaning.",
+  "input": "Patients should not take the drug with alcohol.",
+  "rewrite": "Patients should take the drug with alcohol.",
+  "expect": {
+    "ok": false,
+    "errors": [],
+    "warnings": [
+      "negation_mismatch"
+    ]
+  }
+}

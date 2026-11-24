@@ -1,0 +1,25 @@
+{
+  "id": "vi-07-subtitles-vtt",
+  "lang": "vi",
+  "category": "format",
+  "mode": "standard",
+  "format": "vtt",
+  "input": "WEBVTT\n\nNOTE generated for evals\n\n00:00:01.000 --> 00:00:04.000\nChào mừng các bạn quay lại kênh.\n\n00:00:04.500 --> 00:00:08.000\nHôm nay chúng ta nấu 2 món\nchỉ trong 15 phút.\n\n00:00:08.500 --> 00:00:11.000\nBắt đầu thôi nào.\n",
+  "segments": {
+    "1": "Rất vui được gặp lại mọi người.",
+    "2": "Trong video này, mình sẽ làm 2 món ăn\nmất vỏn vẹn 15 phút.",
+    "3": "Mình vào bếp luôn nhé."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "15"
+    ],
+    "terms": [
+      "NOTE generated for evals"
+    ]
+  },
+  "forbidden": [
+    "summary",
+    "translation"
+  ]
+}

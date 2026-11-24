@@ -1,0 +1,16 @@
+{
+  "id": "ja-11-fixture-negation-dropped",
+  "lang": "ja",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "True positive: dropping a negation flips the meaning.",
+  "input": "この薬は空腹時に飲まないでください。用量は1日2回です。",
+  "rewrite": "この薬は空腹時に飲んでください。用量は1日2回です。",
+  "expect": {
+    "ok": false,
+    "errors": [],
+    "warnings": [
+      "negation_mismatch"
+    ]
+  }
+}

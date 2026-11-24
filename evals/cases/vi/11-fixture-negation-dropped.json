@@ -1,0 +1,16 @@
+{
+  "id": "vi-11-fixture-negation-dropped",
+  "lang": "vi",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "True positive: dropping a negation flips the meaning.",
+  "input": "Trẻ em dưới 6 tuổi không được dùng thuốc này.",
+  "rewrite": "Trẻ em dưới 6 tuổi được dùng thuốc này.",
+  "expect": {
+    "ok": false,
+    "errors": [],
+    "warnings": [
+      "negation_mismatch"
+    ]
+  }
+}

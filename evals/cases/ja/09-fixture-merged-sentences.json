@@ -1,0 +1,14 @@
+{
+  "id": "ja-09-fixture-merged-sentences",
+  "lang": "ja",
+  "category": "check_fixture",
+  "format": "raw",
+  "note": "Two sentences merged into one must align without warnings.",
+  "input": "図書館は9時に開館する。閉館は20時である。会員は10冊まで借りられる。",
+  "rewrite": "図書館の開館時間は9時から20時までである。会員は10冊まで借りられる。",
+  "expect": {
+    "ok": true,
+    "errors": [],
+    "warnings": []
+  }
+}
