@@ -8,7 +8,7 @@
     {
       "name": "paraphrase-anything",
       "description": "Paraphrase, rewrite, or produce diverse variants of any text while keeping numbers, code, names, and facts intact.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "source": "./",
       "skills": [
         "./skills/paraphrase-anything"
