@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.png" alt="paraphrase-anything — Countless variants. One unchanging truth." width="100%">
+  <img src="assets/banner.png" alt="paraphrase-anything: the original text goes through write, review, and assemble; rewritten words change while numbers and citations are kept." width="100%">
 </p>
 
 # paraphrase-anything
