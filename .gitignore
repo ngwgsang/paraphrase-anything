@@ -9,3 +9,7 @@ venv/
 
 # Eval reports
 evals/report.json
+
+# Local design drafts and unused assets
+Claude outputs/
+assets/mascot/
