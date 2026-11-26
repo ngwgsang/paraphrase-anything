@@ -3,8 +3,8 @@
 
 import sys
 
-if sys.version_info < (3, 9):
-    sys.exit("paraphrase-everything requires Python 3.9 or newer")
+if sys.version_info < (3, 10):
+    sys.exit("paraphrase-anything requires Python 3.10 or newer")
 
 from paraphrase_everything.cli import main  # noqa: E402
 

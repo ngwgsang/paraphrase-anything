@@ -16,7 +16,7 @@ Adapters in this directory must follow these rules:
 1. **No Forked Skill Content**: Adapters must point to, symlink, or reference `skills/paraphrase-anything/`. Never duplicate prompt instructions or copy core Python logic into an adapter folder.
 2. **Standard Manifests**: Each integration directory provides the manifest or configuration format required by the target tool (e.g. `codex.json`, `gemini-extension.json`, `.cursorrules`).
 3. **Synchronized Metadata**: Tool manifests must share the same `name`, `version`, and `description` as `.claude-plugin/plugin.json`. Use `python scripts/sync_manifests.py` to verify or propagate metadata.
-4. **Zero Install**: Adapters must execute `pe.py` using standard Python ≥ 3.9 without requiring `pip install`.
+4. **Zero Install**: Adapters must execute `pe.py` using standard Python ≥ 3.10 without requiring `pip install`.
 
 ## Adding a New Tool
 

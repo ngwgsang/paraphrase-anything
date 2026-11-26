@@ -33,4 +33,4 @@ gemini extensions link /path/to/paraphrase-everything
 Or ask naturally: "paraphrase this paragraph in a formal tone".
 
 ## Zero-Install Execution
-No `pip install` is required. All bundled tooling uses only the **Python ≥ 3.9 standard library**.
+No `pip install` is required. All bundled tooling uses only the **Python ≥ 3.10 standard library**.

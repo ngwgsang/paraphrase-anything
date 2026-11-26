@@ -20,7 +20,7 @@
 | **GitHub Copilot (VS Code)** | `integrations/copilot/` (`.github/prompts/paraphrase.prompt.md`, `.github/instructions/`) | ✅ Available |
 
 ### Zero-Install Requirements
-No package installation (`pip`) is needed. All bundled tools require only **Python ≥ 3.9 standard library**.
+No package installation (`pip`) is needed. All bundled tools require only **Python ≥ 3.10 standard library**.
 
 ---
 

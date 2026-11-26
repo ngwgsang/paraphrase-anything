@@ -9,7 +9,7 @@ Rewrite text in the requested style while the **original stays the single source
 You write; the bundled `pe` tool drives the work and verifies it. Never grade your own rewrite
 by eye alone.
 
-`pe` is zero-install (Python ≥ 3.9 standard library). Run it as:
+`pe` is zero-install (Python ≥ 3.10 standard library). Run it as:
 
 ```bash
 python <skill-dir>/scripts/pe.py <command> ...    # use python3 if python is not Python 3

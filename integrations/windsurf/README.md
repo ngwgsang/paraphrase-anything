@@ -31,4 +31,4 @@ The rule expects the skill at `.paraphrase-anything/` in the project root.
 Ask Cascade: "paraphrase this paragraph in a formal tone", "viết lại đoạn này", or "言い換えて".
 
 ## Zero-Install Execution
-No `pip install` is required. All bundled tooling uses only the **Python ≥ 3.9 standard library**.
+No `pip install` is required. All bundled tooling uses only the **Python ≥ 3.10 standard library**.

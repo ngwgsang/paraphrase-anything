@@ -45,7 +45,7 @@ python skills/paraphrase-anything/scripts/pe.py --help  # CLI help
 2. **The LLM writes, code verifies.** Certain errors must be fixed; suspicious changes may
    be accepted with a reason.
 3. **Metrics advise, they do not dictate** (except explicit length targets).
-4. **Zero install.** Core code uses the Python ≥ 3.9 standard library only. Optional
+4. **Zero install.** Core code uses the Python ≥ 3.10 standard library only. Optional
    dependencies go into future extras, never into core.
 5. **Load only what is needed; extend by adding files, not editing core.**
 

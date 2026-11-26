@@ -51,4 +51,4 @@ This repository uses the `paraphrase-anything` skill.
 ```
 
 ## Zero-Install Execution
-No `pip install` is required. All bundled tooling requires only the **Python ≥ 3.9 standard library**.
+No `pip install` is required. All bundled tooling requires only the **Python ≥ 3.10 standard library**.

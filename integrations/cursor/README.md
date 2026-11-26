@@ -34,4 +34,4 @@ Ask in Agent chat: "paraphrase this paragraph in a formal tone", "viết lại �
 with `@paraphrase`.
 
 ## Zero-Install Execution
-No `pip install` is required. All bundled tooling uses only the **Python ≥ 3.9 standard library**.
+No `pip install` is required. All bundled tooling uses only the **Python ≥ 3.10 standard library**.

@@ -45,4 +45,4 @@ Recent VS Code versions can load Agent Skills directly. If yours does, you can c
 instructions files above. Check your VS Code release notes; this adapter works without it.
 
 ## Zero-Install Execution
-No `pip install` is required. All bundled tooling uses only the **Python ≥ 3.9 standard library**.
+No `pip install` is required. All bundled tooling uses only the **Python ≥ 3.10 standard library**.
