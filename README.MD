@@ -1,22 +1,20 @@
 <p align="center">
-  <img src="assets/banner.png" alt="paraphrase-everything — Countless variants. One unchanging truth." width="100%">
+  <img src="assets/banner.png" alt="paraphrase-anything — Countless variants. One unchanging truth." width="100%">
 </p>
 
-# paraphrase-everything
+# paraphrase-anything
 
-A paraphrase skill for AI agents (Claude Code, Codex, and more) that rewrites any text in any tone (formal, casual, academic, plain language, or playful personas) while keeping code, numbers, names, and core facts exactly as they were.
-
-LLMs are good at rewriting but unreliable at staying faithful: they drift in meaning, change figures, break formatting, and lose consistency on long documents. **paraphrase-everything** pairs the model's writing with deterministic tooling that protects what must not change, checks fidelity against the original, and measures how much was actually rewritten.
+🦎 A chameleon for your text: a paraphrase skill for AI agents (Claude Code, Codex, and more) that changes its colors to fit any tone (formal, casual, academic, plain, or playful) or spins off several variants, but never its truth. The LLM does the writing; deterministic tooling protects numbers, names, citations, code, and links, checks every rewrite against the original, and measures how much actually changed.
 
 ## Installation
 
 | Tool / Environment | Installation Method | Status |
 |--------------------|---------------------|--------|
-| **Claude Code** | `/plugin marketplace add ngwgsang/paraphrase-everything`<br>`/plugin install paraphrase-anything` | ✅ Available |
-| **Skills CLI** | `npx skills add ngwgsang/paraphrase-everything` | ✅ Available |
+| **Claude Code** | `/plugin marketplace add ngwgsang/paraphrase-anything`<br>`/plugin install paraphrase-anything` | ✅ Available |
+| **Skills CLI** | `npx skills add ngwgsang/paraphrase-anything` | ✅ Available |
 | **Standalone CLI (`pe.py`)** | Direct execution: `python skills/paraphrase-anything/scripts/pe.py <cmd>` | ✅ Available |
 | **OpenAI Codex CLI** | `integrations/codex/` (copy/symlink to `~/.codex/skills`) | ✅ Available |
-| **Gemini CLI** | `gemini extensions install https://github.com/ngwgsang/paraphrase-everything` (see `integrations/gemini/`) | ✅ Available |
+| **Gemini CLI** | `gemini extensions install https://github.com/ngwgsang/paraphrase-anything` (see `integrations/gemini/`) | ✅ Available |
 | **Cursor** | `integrations/cursor/` (`.cursor/rules/paraphrase.mdc`) | ✅ Available |
 | **Windsurf** | `integrations/windsurf/` (`.windsurf/rules/paraphrase.md`) | ✅ Available |
 | **GitHub Copilot (VS Code)** | `integrations/copilot/` (`.github/prompts/paraphrase.prompt.md`, `.github/instructions/`) | ✅ Available |
@@ -95,11 +93,11 @@ python skills/paraphrase-anything/scripts/pe.py restore masked-rewrite.txt --map
 
 ## Star History
 
-<a href="https://star-history.com/#ngwgsang/paraphrase-everything&Date">
+<a href="https://star-history.com/#ngwgsang/paraphrase-anything&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ngwgsang/paraphrase-everything&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ngwgsang/paraphrase-everything&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ngwgsang/paraphrase-everything&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ngwgsang/paraphrase-anything&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ngwgsang/paraphrase-anything&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ngwgsang/paraphrase-anything&type=Date" />
   </picture>
 </a>
 
@@ -114,14 +112,14 @@ python skills/paraphrase-anything/scripts/pe.py restore masked-rewrite.txt --map
 
 Contributions are welcome! The contribution guide is coming soon. Until then:
 
-- **Bugs and ideas:** open an [issue](https://github.com/ngwgsang/paraphrase-everything/issues).
+- **Bugs and ideas:** open an [issue](https://github.com/ngwgsang/paraphrase-anything/issues).
 - **New language packs or personas:** open an issue first so we can agree on the scope.
 - **Pull requests:** keep them focused, include tests where relevant, and describe what changed and why.
 
 Thanks to all our contributors:
 
-<a href="https://github.com/ngwgsang/paraphrase-everything/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ngwgsang/paraphrase-everything" />
+<a href="https://github.com/ngwgsang/paraphrase-anything/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ngwgsang/paraphrase-anything" />
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
