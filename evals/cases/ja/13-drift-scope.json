@@ -1,0 +1,22 @@
+{
+  "id": "ja-13-drift-scope",
+  "lang": "ja",
+  "category": "drift",
+  "mode": "standard",
+  "format": "raw",
+  "note": "Meaning drift (scope) that pe check does not see; only the entailment judge can catch it.",
+  "input": "一部の利用者は、バージョン2.1で動作が遅くなったと報告した。",
+  "rewrite": "バージョン2.1で動作が遅くなったという報告が、一部の利用者から寄せられた。",
+  "drift": {
+    "kind": "scope",
+    "rewrite": "バージョン2.1で動作が遅くなったという報告が、利用者全員から寄せられた。",
+    "forward": "neutral",
+    "backward": "entail",
+    "reason": "「一部の利用者」(some users) became 「利用者全員」(all users)."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "2.1"
+    ]
+  }
+}

@@ -1,8 +1,9 @@
-"""Evaluation suite runner for paraphrase-everything (story 011).
+"""Evaluation suite runner for paraphrase-anything (stories 011, 028).
 
 Evaluates fixed (pre-written) rewrites across languages (en, vi, ja) for fidelity, divergence metrics,
-pairwise diversity, format round trips, check fixtures, and prompt trigger accuracy. Produces a
-summary table, per-language scores, a decision gate, and a JSON report.
+pairwise diversity, format round trips, check fixtures, and prompt trigger accuracy, then replays the
+rewrites through one-shot and the harness presets to compare pipelines. Produces summary tables,
+per-language scores, a decision gate, and a JSON report.
 """
 
 import argparse
@@ -17,6 +18,11 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from paraphrase_everything import check, io as formats, lang, metrics, protect
+
+try:
+    from evals import pipelines
+except ImportError:  # run as a script: evals/ itself is on sys.path
+    import pipelines
 
 TRIGGERS_FILE = ROOT / "evals" / "triggers.json"
 THRESHOLDS_FILE = ROOT / "evals" / "thresholds.json"
@@ -239,6 +245,21 @@ def _eval_format(case, result):
     _score_pair(case, result, original, rewrite, problems, output=rebuilt)
 
 
+def _eval_drift(case, result):
+    """A drift case is valid when ``pe check`` passes both the faithful and the drifted rewrite.
+
+    The drift must be invisible to surface checks; catching it is left to the pipelines.
+    """
+    original = case.get("input", "")
+    faithful = check.check(original, case.get("rewrite", ""), lang_code=result["lang"])
+    drifted = check.check(original, case["drift"]["rewrite"], lang_code=result["lang"])
+    missing = _missing_invariants(case, case.get("rewrite", ""))
+    result["ok"] = faithful["ok"] and drifted["ok"] and not drifted["warnings"] and not missing
+    result["fidelity"] = "MISSED" if result["ok"] else "FAIL"
+    result["details"].update(check=faithful, drift_check=drifted, missing_invariants=missing)
+    result["stats"] = {"drift": 1}
+
+
 def evaluate_case(case):
     """Run fidelity checks, metrics, format round trips, or triggers for a single eval case dict."""
     result = _new_result(case)
@@ -246,6 +267,8 @@ def evaluate_case(case):
         _eval_triggers(case, result)
     elif result["category"] == "variants":
         _eval_variants(case, result)
+    elif result["category"] == "drift":
+        _eval_drift(case, result)
     elif case.get("format") in formats.FORMATS:
         _eval_format(case, result)
     else:
@@ -335,8 +358,12 @@ def build_language_table(by_lang):
     return "\n".join(lines)
 
 
-def run_evals(cases_dir=None, json_path=None, lang_filter=None, quiet=False, thresholds=None):
-    """Run all evaluation cases, write JSON report, and return (exit_code, report_dict)."""
+def run_evals(cases_dir=None, json_path=None, lang_filter=None, quiet=False, thresholds=None,
+              pipeline_names=pipelines.PIPELINES):
+    """Run all evaluation cases, write JSON report, and return (exit_code, report_dict).
+
+    ``pipeline_names`` selects the pipelines to compare; an empty list skips the comparison.
+    """
     cases_dir = Path(cases_dir) if cases_dir else ROOT / "evals" / "cases"
     json_path = Path(json_path) if json_path else ROOT / "evals" / "report.json"
     thresholds = load_thresholds() if thresholds is None else thresholds
@@ -355,9 +382,10 @@ def run_evals(cases_dir=None, json_path=None, lang_filter=None, quiet=False, thr
         grouped.setdefault(r["lang"], []).append(r)
     by_lang = {code: score_language(rs) for code, rs in grouped.items()}
     gate = apply_gate(by_lang, thresholds)
+    comparison = pipelines.compare(cases, pipeline_names) if pipeline_names else None
 
     report = {
-        "ok": passed == total and gate["ok"],
+        "ok": passed == total and gate["ok"] and (comparison is None or comparison["ok"]),
         "total": total,
         "passed": passed,
         "failed": total - passed,
@@ -365,6 +393,7 @@ def run_evals(cases_dir=None, json_path=None, lang_filter=None, quiet=False, thr
         "by_lang": by_lang,
         "gate": gate,
         "results": results,
+        "pipelines": comparison,
     }
 
     json_path.parent.mkdir(parents=True, exist_ok=True)
@@ -381,6 +410,12 @@ def run_evals(cases_dir=None, json_path=None, lang_filter=None, quiet=False, thr
         for f in gate["failures"]:
             bound = "min" if "min" in f else "max"
             print(f"  {f['lang']}: {f['score']} = {f['value']} ({bound} {f[bound]})")
+        if comparison:
+            print("Pipelines (one-shot vs harness presets):")
+            print(pipelines.build_table(comparison["summary"]))
+            for r in comparison["runs"]:
+                if r["status"] != "complete":
+                    print(f"  {r['id']} ({r['pipeline']}): {r['status']} {r.get('open_issues')}")
         print(f"Report written to: {json_path}\n")
 
     return (0 if report["ok"] else 1), report
@@ -388,17 +423,22 @@ def run_evals(cases_dir=None, json_path=None, lang_filter=None, quiet=False, thr
 
 def main():
     """CLI entry point for running the evaluation suite."""
-    parser = argparse.ArgumentParser(description="Paraphrase-everything evaluation suite runner")
+    parser = argparse.ArgumentParser(description="paraphrase-anything evaluation suite runner")
     parser.add_argument("--cases", default=str(ROOT / "evals" / "cases"), help="Directory with eval cases")
     parser.add_argument("--json", default=str(ROOT / "evals" / "report.json"), help="Output path for JSON report")
     parser.add_argument("--lang", choices=["en", "vi", "ja"], help="Filter cases by language")
     parser.add_argument("--thresholds", default=str(THRESHOLDS_FILE), help="Decision-gate thresholds JSON")
+    parser.add_argument("--pipeline", action="append", choices=pipelines.PIPELINES + ("none",),
+                        help="pipeline to compare (repeatable; default: all; 'none' skips the comparison)")
     parser.add_argument("--quiet", action="store_true", help="Suppress summary table output")
     args = parser.parse_args()
 
+    chosen = args.pipeline or list(pipelines.PIPELINES)
+    names = [] if "none" in chosen else [p for p in pipelines.PIPELINES if p in chosen]
     try:
         exit_code, _ = run_evals(cases_dir=args.cases, json_path=args.json, lang_filter=args.lang,
-                                 quiet=args.quiet, thresholds=load_thresholds(args.thresholds))
+                                 quiet=args.quiet, thresholds=load_thresholds(args.thresholds),
+                                 pipeline_names=names)
     except (OSError, RuntimeError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         sys.exit(2)

@@ -1,0 +1,22 @@
+{
+  "id": "en-14-drift-scope",
+  "lang": "en",
+  "category": "drift",
+  "mode": "standard",
+  "format": "raw",
+  "note": "Meaning drift (scope) that pe check does not see; only the entailment judge can catch it.",
+  "input": "Some users reported crashes after installing version 2.1.",
+  "rewrite": "A number of users said the app crashed after they installed version 2.1.",
+  "drift": {
+    "kind": "scope",
+    "rewrite": "Users said the app crashed after they installed version 2.1.",
+    "forward": "neutral",
+    "backward": "entail",
+    "reason": "'Some users' became users in general: the rewrite claims more than the original."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "2.1"
+    ]
+  }
+}

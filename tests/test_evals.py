@@ -71,6 +71,13 @@ class EvalCasesTest(unittest.TestCase):
             if data["category"] == "check_fixture":
                 self.assertTrue(data["expect"] and set(data["expect"]) <= {"ok", "errors", "warnings"},
                                 str(path))
+            if data["category"] == "drift":
+                drift = data["drift"]
+                self.assertIn(drift["kind"], ("scope", "negation", "conditional"), str(path))
+                self.assertTrue(drift["rewrite"] and drift["reason"], str(path))
+                self.assertNotEqual(drift["rewrite"], data["rewrite"], str(path))
+                self.assertIn("entail", (drift["forward"], drift["backward"]), str(path))
+                self.assertNotEqual((drift["forward"], drift["backward"]), ("entail", "entail"), str(path))
 
 
 class TriggerTermsTest(unittest.TestCase):

@@ -1,0 +1,17 @@
+{
+  "id": "en-16-drift-conditional",
+  "lang": "en",
+  "category": "drift",
+  "mode": "standard",
+  "format": "raw",
+  "note": "Meaning drift (conditional) that pe check does not see; only the entailment judge can catch it.",
+  "input": "If the server fails twice in an hour, the backup takes over.",
+  "rewrite": "The backup takes over if the server fails twice within an hour.",
+  "drift": {
+    "kind": "conditional",
+    "rewrite": "The server fails twice in an hour, so the backup takes over.",
+    "forward": "neutral",
+    "backward": "entail",
+    "reason": "The condition became an asserted cause: the rewrite states that the server fails."
+  }
+}

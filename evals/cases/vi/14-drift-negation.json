@@ -1,0 +1,22 @@
+{
+  "id": "vi-14-drift-negation",
+  "lang": "vi",
+  "category": "drift",
+  "mode": "standard",
+  "format": "raw",
+  "note": "Meaning drift (negation) that pe check does not see; only the entailment judge can catch it.",
+  "input": "Không phải nhân viên nào cũng được nghỉ 12 ngày phép mỗi năm.",
+  "rewrite": "Không phải ai trong số nhân viên cũng có 12 ngày nghỉ phép hằng năm.",
+  "drift": {
+    "kind": "negation",
+    "rewrite": "Không nhân viên nào được nghỉ 12 ngày phép mỗi năm.",
+    "forward": "neutral",
+    "backward": "entail",
+    "reason": "'Không phải ... nào cũng' (not every) became 'không ... nào' (none): both keep a negation marker."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "12"
+    ]
+  }
+}

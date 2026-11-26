@@ -1,0 +1,22 @@
+{
+  "id": "vi-15-drift-conditional",
+  "lang": "vi",
+  "category": "drift",
+  "mode": "standard",
+  "format": "raw",
+  "note": "Meaning drift (conditional) that pe check does not see; only the entailment judge can catch it.",
+  "input": "Nếu trời mưa trên 50 mm, trận đấu sẽ bị hoãn.",
+  "rewrite": "Trận đấu sẽ bị hoãn nếu lượng mưa vượt quá 50 mm.",
+  "drift": {
+    "kind": "conditional",
+    "rewrite": "Trời mưa trên 50 mm nên trận đấu bị hoãn.",
+    "forward": "neutral",
+    "backward": "entail",
+    "reason": "The condition 'nếu' became a cause 'nên': the rewrite states that it rained and the match was postponed."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "50 mm"
+    ]
+  }
+}

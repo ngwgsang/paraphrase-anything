@@ -1,0 +1,23 @@
+{
+  "id": "vi-13-drift-scope",
+  "lang": "vi",
+  "category": "drift",
+  "mode": "standard",
+  "format": "raw",
+  "note": "Meaning drift (scope) that pe check does not see; only the entailment judge can catch it.",
+  "input": "Một số học sinh đạt trên 8 điểm trong kỳ thi năm 2024.",
+  "rewrite": "Trong kỳ thi năm 2024, có một vài học sinh đạt trên 8 điểm.",
+  "drift": {
+    "kind": "scope",
+    "rewrite": "Trong kỳ thi năm 2024, học sinh đều đạt trên 8 điểm.",
+    "forward": "neutral",
+    "backward": "entail",
+    "reason": "'Một số học sinh' (some students) became 'học sinh đều' (all students)."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "8",
+      "2024"
+    ]
+  }
+}

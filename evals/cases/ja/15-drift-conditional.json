@@ -1,0 +1,22 @@
+{
+  "id": "ja-15-drift-conditional",
+  "lang": "ja",
+  "category": "drift",
+  "mode": "standard",
+  "format": "raw",
+  "note": "Meaning drift (conditional) that pe check does not see; only the entailment judge can catch it.",
+  "input": "気温が35度を超えた場合、屋外での練習は中止される。",
+  "rewrite": "屋外での練習は、気温が35度を超えたときには中止になる。",
+  "drift": {
+    "kind": "conditional",
+    "rewrite": "気温が35度を超えたため、屋外での練習は中止された。",
+    "forward": "neutral",
+    "backward": "entail",
+    "reason": "The condition 「場合」 became a cause 「ため」: the rewrite reports that it happened."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "35"
+    ]
+  }
+}

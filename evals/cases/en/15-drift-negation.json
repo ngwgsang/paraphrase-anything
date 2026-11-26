@@ -1,0 +1,22 @@
+{
+  "id": "en-15-drift-negation",
+  "lang": "en",
+  "category": "drift",
+  "mode": "standard",
+  "format": "raw",
+  "note": "Meaning drift (negation) that pe check does not see; only the entailment judge can catch it.",
+  "input": "Not every patient in the trial responded to the 20 mg dose.",
+  "rewrite": "The 20 mg dose did not work for every patient in the trial.",
+  "drift": {
+    "kind": "negation",
+    "rewrite": "No patient in the trial responded to the 20 mg dose.",
+    "forward": "neutral",
+    "backward": "entail",
+    "reason": "'Not every' (some did not) became 'no patient' (none did): both keep a negation, so check sees no change."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "20 mg"
+    ]
+  }
+}
