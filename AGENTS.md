@@ -96,6 +96,7 @@ Semantic versioning; while below 1.0 each roadmap milestone is a minor release:
 | v0.2 | 0.2.0 |
 | v0.3 | 0.3.0 |
 | v0.4 | 0.4.0 |
+| v0.5 | 0.5.0 |
 
 - **Minor bump** when the last story of a milestone is done (every story listed for it in
   `.dev/docs/README.md` is done or explicitly deferred). Never bump for a partly done milestone.
