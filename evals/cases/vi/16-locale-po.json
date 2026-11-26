@@ -1,0 +1,22 @@
+{
+  "id": "vi-16-locale-po",
+  "lang": "vi",
+  "category": "format",
+  "mode": "standard",
+  "format": "po",
+  "note": "Locale file (po): only string values change; keys, placeholders, and short labels stay.",
+  "input": "msgid \"\"\nmsgstr \"\"\n\"Language: vi\\n\"\n\n#: app/cart.py:12\nmsgid \"Your cart is empty.\"\nmsgstr \"Giỏ hàng của bạn hiện chưa có sản phẩm nào.\"\n\nmsgid \"%(count)d items, total %(total)s\"\nmsgstr \"Có %(count)d sản phẩm, tổng cộng %(total)s\"\n\nmsgid \"Pay\"\nmsgstr \"Thanh toán\"\n",
+  "segments": {
+    "1": "Bạn chưa thêm sản phẩm nào vào giỏ hàng.",
+    "2": "Tổng cộng %(total)s cho %(count)d sản phẩm",
+    "3": "Tiến hành thanh toán"
+  },
+  "expected_invariants": {
+    "terms": [
+      "%(count)d",
+      "%(total)s",
+      "msgid \"Your cart is empty.\"",
+      "msgid \"Pay\""
+    ]
+  }
+}

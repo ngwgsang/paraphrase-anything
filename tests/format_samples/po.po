@@ -1,0 +1,24 @@
+# Sample catalog
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/app.py:10
+msgid "Your changes were saved."
+msgstr "All of your changes have been saved."
+
+#, python-format
+msgctxt "upload"
+msgid "Upload %(name)s"
+msgid_plural "Upload %(count)d files"
+msgstr[0] "Start uploading the file %(name)s now"
+msgstr[1] "Start uploading %(count)d files now"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Long help text"
+msgstr ""
+"The first line of a long help text.\n"
+"The second line explains the rest."

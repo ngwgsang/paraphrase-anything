@@ -69,5 +69,30 @@ def rebuild(source, segments, rewritten):
 
 
 def public(segments):
-    """The JSON-facing view of segments: only ``id`` and ``text``."""
-    return [{"id": s["id"], "text": s["text"]} for s in segments]
+    """The JSON-facing view of segments: ``id``, ``text``, and ``context`` when the format gives one."""
+    return [dict({"id": s["id"], "text": s["text"]}, **({"context": s["context"]} if "context" in s else {}))
+            for s in segments]
+
+
+SHORT_WORD = 10
+_WORD_RUN = re.compile(r"\w+")
+
+
+def worth_rewriting(text):
+    """``None`` when ``text`` has prose to rewrite, else why it is left alone.
+
+    Used by string-table formats (locale files, CSV cells) where many values are labels.
+    """
+    from ..protect import find_spans  # imported here: protect is not needed by the other formats
+
+    chars = list(text)
+    for s, e, _ in find_spans(text):
+        chars[s:e] = " " * (e - s)
+    prose = "".join(chars).strip()
+    if not prose:
+        return "empty" if not text.strip() else "only placeholders or markup"
+    if not _WORD_RUN.search(prose):
+        return "no words"
+    if not any(ch.isspace() for ch in prose) and len(prose) <= SHORT_WORD:
+        return "a single short word"
+    return None

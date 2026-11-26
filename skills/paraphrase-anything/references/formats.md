@@ -9,6 +9,8 @@ rewritten; everything else in the file is copied back byte for byte, with its li
 | `markdown` | `.md`, `.markdown` | headings, list items, block quotes, paragraphs | front matter, code, tables, HTML blocks, link definitions |
 | `srt` | `.srt` | cue text | indices, timing lines |
 | `vtt` | `.vtt` | cue text | header, timing lines, `NOTE` / `STYLE` / `REGION` blocks |
+| `json` | `.json` | string values (locale files) | keys, numbers, booleans, structure, indentation |
+| `po` | `.po`, `.pot` | `msgstr` (or `msgid` in a template) | `msgid`, `msgctxt`, comments, flags, the header |
 
 A test keeps this table in sync with the formats the code registers.
 
@@ -22,8 +24,25 @@ the content is sniffed (WebVTT header, then SRT timing lines, then Markdown synt
 
 Some formats take options, passed as `--format-option key=value` (repeatable) to `pe extract`,
 `pe rebuild`, and `pe run init`. A format rejects options it does not declare. Option types:
-`str`, `list` (comma-separated), `bool` (`true` / `false`), and `int`. None of the formats above
-declare options yet.
+`str`, `list` (comma-separated), `bool` (`true` / `false`), and `int`.
+
+| Format | Option | Type | Effect |
+|--------|--------|------|--------|
+| `json` | `keys` | list | rewrite only values whose dotted key path matches a glob, e.g. `keys=checkout.*,errors.*` |
+
+## Locale files (`json`, `po`)
+
+- Each segment carries `context`: the dotted key path (`json`) or the source `msgid` (`po`), so
+  the rewrite fits where the string is shown. Never edit keys or ids.
+- Values that are empty, only placeholders, or a single short word (button labels like "Save")
+  are not segments; `pe extract` lists them under `skipped` with the reason.
+- Interpolation placeholders are protected spans: `{name}`, `{{name}}`, `%{name}`, `{0}`, printf
+  `%s` `%d` `%1$s` `%(name)s` `%@`, and whole ICU `plural` / `select` blocks. A missing or
+  changed placeholder is a `pe check` error, so the app still loads the string.
+- `po`: in a catalog with translations, `msgstr` (and each `msgstr[n]`) is rewritten; in a
+  template where every `msgstr` is empty, `msgid` and `msgid_plural` are. A field written over
+  several `"..."` lines is written back one line per `\n`.
+- Rewriting never translates: keep the language of each string.
 
 ## Adding a format
 

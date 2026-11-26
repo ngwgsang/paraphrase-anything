@@ -1,0 +1,24 @@
+{
+  "id": "en-17-locale-json",
+  "lang": "en",
+  "category": "format",
+  "mode": "standard",
+  "format": "json",
+  "note": "Locale file (json): only string values change; keys, placeholders, and short labels stay.",
+  "input": "{\n  \"checkout\": {\n    \"title\": \"Checkout\",\n    \"empty\": \"Your cart is empty. Add a few items to get started.\",\n    \"items\": \"You have {count} items in your cart, totaling {total}.\",\n    \"error\": \"We could not process your payment. Please try again in 5 minutes.\"\n  }\n}\n",
+  "segments": {
+    "1": "Your cart is currently empty. Add some products to begin.",
+    "2": "Your cart holds {count} items, for a total of {total}.",
+    "3": "We could not complete your payment. Please retry in 5 minutes."
+  },
+  "expected_invariants": {
+    "numbers": [
+      "5"
+    ],
+    "terms": [
+      "{count}",
+      "{total}",
+      "\"title\": \"Checkout\""
+    ]
+  }
+}

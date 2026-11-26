@@ -14,7 +14,8 @@ TEXT_FORMAT = io.REGISTRY.fallback
 FILE_EXTENSIONS = {name: ext for name, ext in io.OUTPUTS.items() if name != TEXT_FORMAT}
 SEGMENT_BREAK = "\n\n"
 MAX_VARIANTS = 5
-_BLOCK_BREAK = re.compile(r"(?:\r\n|\r|\n)[ \t]*(?:\r\n|\r|\n)")
+# A blank line; ``\r(?!\n)`` so the two halves of one CRLF are never read as two line breaks.
+_BLOCK_BREAK = re.compile(r"(?:\r\n|\r(?!\n)|\n)[ \t]*(?:\r\n|\r(?!\n)|\n)")
 
 
 class RouteError(Exception):

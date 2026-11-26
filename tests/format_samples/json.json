@@ -1,0 +1,13 @@
+{
+  "app": {
+    "title": "Paraphrase Studio",
+    "welcome": "Welcome back, {name}! You have {count} new messages.",
+    "save": "Save"
+  },
+  "errors": [
+    "The file could not be uploaded because it is too large.",
+    "Please check your connection and try again."
+  ],
+  "limit": 5,
+  "enabled": true
+}

@@ -65,10 +65,10 @@ class RegistryTest(unittest.TestCase):
         self.assertEqual(registered, modules)
 
     def test_existing_formats_keep_their_metadata(self):
-        self.assertEqual(io.EXTENSIONS, {".txt": "text", ".md": "markdown", ".markdown": "markdown",
-                                         ".srt": "srt", ".vtt": "vtt"})
+        expected = {".txt": "text", ".md": "markdown", ".markdown": "markdown", ".srt": "srt", ".vtt": "vtt"}
+        self.assertEqual({e: n for e, n in io.EXTENSIONS.items() if e in expected}, expected)
         self.assertEqual(io.REGISTRY.fallback, "text")
-        self.assertEqual(io.REGISTRY.sniff_order, ["vtt", "srt", "markdown"])
+        self.assertEqual(io.REGISTRY.sniff_order[:3], ["vtt", "srt", "markdown"])
 
     def test_routes_and_harness_derive_from_the_registry(self):
         self.assertEqual(routes.FILE_EXTENSIONS, {n: e for n, e in io.OUTPUTS.items() if n != "text"})
@@ -203,7 +203,7 @@ class DocsTest(unittest.TestCase):
         rows = {}
         for line in FORMATS_MD.read_text(encoding="utf-8").splitlines():
             cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if len(cells) >= 2 and cells[0].startswith("`") and cells[0] != "`name`":
+            if len(cells) >= 2 and cells[0].startswith("`") and cells[1].startswith("`."):
                 rows[cells[0].strip("`")] = sorted(e.strip(" `") for e in cells[1].split(","))
         expected = {name: sorted(e for e, n in io.EXTENSIONS.items() if n == name) for name in io.FORMATS}
         self.assertEqual(rows, expected)

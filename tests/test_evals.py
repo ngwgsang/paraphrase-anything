@@ -62,7 +62,7 @@ class EvalCasesTest(unittest.TestCase):
                 self.assertIn("variants", data, f"missing variants in {path}")
                 self.assertGreaterEqual(len(data["variants"]), 2)
             elif data["category"] == "format":
-                self.assertIn(data.get("format"), ("text", "markdown", "srt", "vtt"), str(path))
+                self.assertIn(data.get("format"), run_evals.formats.FORMATS, str(path))
                 self.assertIn("input", data, f"missing input in {path}")
                 self.assertTrue(data.get("segments"), f"missing segments in {path}")
             else:

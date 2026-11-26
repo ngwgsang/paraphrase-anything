@@ -3,7 +3,8 @@
 What must survive a paraphrase, and how `pe` enforces it.
 
 ## Masked by `pe protect` (never visible to you as text)
-Code blocks, inline code, URLs, Markdown link targets, emails, LaTeX, HTML tags, and any term
+Code blocks, inline code, URLs, Markdown link targets, emails, LaTeX, HTML tags, interpolation
+placeholders (`{name}`, `%s`, `%(name)s`, ICU blocks; see [formats](formats.md)), and any term
 passed with `--keep`. They become `⟦Pn⟧` placeholders.
 
 - Keep every placeholder **exactly once**. Do not translate, split, or re-number it.

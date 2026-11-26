@@ -212,9 +212,12 @@ def cmd_extract(args):
     fmt = _format_of(args, source)
     try:
         segments = formats.public(formats.extract(source, fmt, args.format_option))
+        left = formats.skipped(source, fmt, args.format_option)
     except formats.FormatError as e:
         return {"ok": False, "error": str(e)}, EXIT_ERROR
     result = {"ok": True, "format": fmt, "count": len(segments), "segments": segments}
+    if left:
+        result["skipped"] = left
     if args.output:
         _write_text(args.output, json.dumps(result, ensure_ascii=False, indent=2))
         return {"ok": True, "format": fmt, "count": len(segments), "output": args.output}, EXIT_OK

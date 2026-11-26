@@ -171,10 +171,17 @@ def extract(source, fmt, opts=None):
     return REGISTRY.module(fmt).extract(source, **options(fmt, opts or {}))
 
 
+def skipped(source, fmt, opts=None):
+    """Values the format leaves alone and why (``[]`` for formats that rewrite every block)."""
+    module = REGISTRY.module(fmt)
+    finder = getattr(module, "skipped", None)
+    return finder(source, **options(fmt, opts or {})) if finder else []
+
+
 def rebuild(source, fmt, rewritten, opts=None):
     """Return ``source`` with segments replaced by ``rewritten`` (``{id: text}``)."""
     return REGISTRY.module(fmt).rebuild(source, rewritten, **options(fmt, opts or {}))
 
 
 __all__ = ["EXTENSIONS", "FORMATS", "OUTPUTS", "REGISTRY", "FormatError", "Registry", "detect", "discover",
-           "extract", "options", "public", "rebuild"]
+           "extract", "options", "public", "rebuild", "skipped"]

@@ -1,0 +1,19 @@
+{
+  "id": "ja-16-locale-json",
+  "lang": "ja",
+  "category": "format",
+  "mode": "standard",
+  "format": "json",
+  "note": "Locale file (json): only string values change; keys, placeholders, and short labels stay.",
+  "input": "{\n  \"cart\": {\n    \"empty\": \"カートは空です。商品を追加してください。\",\n    \"count\": \"カートに{count}点の商品が入っています。\",\n    \"ok\": \"OK\"\n  }\n}\n",
+  "segments": {
+    "1": "現在カートは空です。商品を追加しましょう。",
+    "2": "現在、カートには{count}点の商品があります。"
+  },
+  "expected_invariants": {
+    "terms": [
+      "{count}",
+      "\"ok\": \"OK\""
+    ]
+  }
+}

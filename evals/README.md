@@ -23,7 +23,7 @@ One JSON file per case in `cases/<lang>/NN-slug.json`; `id` must be `<lang>-NN-s
 |---|---|---|
 | `prose`, `technical`, `academic`, `accept_warning` | `input`, `rewrite` | `check` is ok (after `accept`), invariants are present |
 | `variants` | `input`, `variants` (≥ 2) | every variant passes `check`, no pair is too similar |
-| `format` | `format` (`text`/`markdown`/`srt`/`vtt`), `input`, `segments` (`{id: text}`) | rebuild keeps everything outside the segments byte for byte, and the segment prose passes `check` |
+| `format` | `format` (any registered format, see `references/formats.md`), `input`, `segments` (`{id: text}`) | rebuild keeps everything outside the segments byte for byte, and the segment prose passes `check` |
 | `check_fixture` | `input`, `rewrite`, `expect`, `note` | the `check` report matches `expect` |
 | `triggers` | `prompts` (`prompt`, `expected_trigger`) | every prompt is classified as expected |
 | `drift` | `input`, `rewrite`, `drift` (`kind`, `rewrite`, `forward`, `backward`, `reason`) | `check` passes both the faithful `rewrite` and the drifted `drift.rewrite`: the drift is invisible to surface checks |

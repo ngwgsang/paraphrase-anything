@@ -29,6 +29,13 @@ DETECTORS = [
     # ASCII-only bodies so a URL glued to CJK text ("…を参照") stops at the URL.
     ("url", re.compile(r"(?<![A-Za-z0-9])(?:https?://|www\.)[A-Za-z0-9\-._~:/?#@!$&*+,;=%]+")),
     ("email", re.compile(r"(?<![A-Za-z0-9.+-])[A-Za-z0-9.+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")),
+    # Interpolation placeholders of localization strings (story 031). An ICU plural / select
+    # block (two levels of nested braces) is kept whole.
+    ("icu_block", re.compile(
+        r"\{\s*\w+\s*,\s*(?:plural|selectordinal|select)\s*,(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}")),
+    ("placeholder", re.compile(
+        r"\{\{\s*[\w.-]+\s*\}\}|%\{\w+\}|\{[A-Za-z_]\w*(?:\.\w+)*\}|\{\d+\}"
+        r"|(?<![\w%])%(?:\(\w+\)|\d+\$)?[-+0#]?\d*(?:\.\d+)?[sdif@]")),
 ]
 
 _TRAILING_PUNCT = ".,;:!?"
