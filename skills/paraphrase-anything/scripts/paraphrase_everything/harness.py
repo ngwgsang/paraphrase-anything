@@ -23,7 +23,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from . import check, entailment, facts, glossary, lang, metrics, planning, protect, routes
+from . import check, entailment, facts, glossary, io, lang, metrics, planning, protect, routes
 
 SKILL_DIR = Path(__file__).resolve().parents[2]
 REFERENCES = SKILL_DIR / "references"
@@ -66,7 +66,7 @@ GATES = [p["gate"] for p in PASSES]
 BY_GATE = {p["gate"]: p for p in PASSES}
 STRUCTURE_OPS = set(BY_ID["structure"]["ops"])
 COUNT_CHANGING_OPS = STRUCTURE_OPS | {"shorten", "expand"}
-FORMATS = ("text",) + tuple(routes.FILE_EXTENSIONS)
+FORMATS = (routes.TEXT_FORMAT,) + tuple(sorted(routes.FILE_EXTENSIONS))
 
 
 class HarnessError(Exception):
@@ -245,19 +245,24 @@ def skipped_checks(state):
 
 
 def init(text, session_dir=None, mode="standard", persona=None, lang_code="auto", passes=None,
-         max_rounds=DEFAULT_MAX_ROUNDS, gates=None, preset=None, fmt="text", variants=1):
+         max_rounds=DEFAULT_MAX_ROUNDS, gates=None, preset=None, fmt="text", variants=1,
+         format_options=None):
     """Create a session for ``text`` and return its state; ``session_dir`` defaults to a temp dir.
 
     ``passes`` and ``gates`` override the preset's; without a preset everything is enabled.
-    ``fmt`` is the input format (``text``, ``markdown``, ``srt``, ``vtt``); file formats are
-    rewritten as their prose segments. ``variants`` > 1 asks for that many distinct rewrites.
+    ``fmt`` is the input format (any name in ``FORMATS``); file formats are rewritten as their
+    prose segments, read with ``format_options`` (``key=value`` pairs or a dict). ``variants`` > 1 asks for that many distinct rewrites.
     """
     if fmt not in FORMATS:
         raise HarnessError(f"unknown format {fmt!r}; choose from {', '.join(FORMATS)}")
-    source, segments = text, None
+    source, segments, opts = text, None, {}
+    try:
+        opts = io.options(fmt, format_options)
+    except io.FormatError as e:
+        raise HarnessError(str(e)) from None
     if fmt != "text":
         try:
-            text, segments = routes.file_prose(source, fmt)
+            text, segments = routes.file_prose(source, fmt, opts)
         except routes.RouteError as e:
             raise HarnessError(str(e)) from None
     if not text.strip():
@@ -303,6 +308,7 @@ def init(text, session_dir=None, mode="standard", persona=None, lang_code="auto"
         "mode": mode,
         "persona": persona,
         "format": fmt,
+        "format_options": opts,
         "segments": segments,
         "long": long,
         "variants": [f"v{k}" for k in range(1, variants + 1)] if variants > 1 else [],
@@ -998,7 +1004,7 @@ def _finish(session_dir, state, pid):
         _write_text(session_dir / _output_name(unit), text)
         if state["format"] != "text":
             source = _read_text(session_dir / _source_name(state))
-            rebuilt = routes.rebuild_file(source, state["format"], text)
+            rebuilt = routes.rebuild_file(source, state["format"], text, state.get("format_options"))
             _write_text(session_dir / _output_name(unit, routes.FILE_EXTENSIONS[state["format"]]), rebuilt)
 
 

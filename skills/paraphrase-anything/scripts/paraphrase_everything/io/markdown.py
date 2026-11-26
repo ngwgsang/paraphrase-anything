@@ -20,6 +20,17 @@ _HTML = re.compile(r"^\s{0,3}</?[A-Za-z!]")
 _DEFINITION = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*\S")
 _INDENTED_CODE = re.compile(r"^(?:\t| {4})")
 _LEADING_WS = re.compile(r"[ \t]*")
+_SNIFF = re.compile(
+    r"^(?:#{1,6}[ \t]+\S|[ \t]*(?:[-*+]|\d+[.)])[ \t]+\S|[ \t]{0,3}(?:```|~~~)|[ \t]{0,3}>)"
+    r"|\]\(|\*\*\S|^\|.*\|[ \t]*$", re.MULTILINE)
+
+
+def sniff(source):
+    """Whether ``source`` uses Markdown syntax (headings, lists, fences, quotes, links, tables)."""
+    return bool(_SNIFF.search(source))
+
+
+SPECS = [{"name": "markdown", "extensions": [".md", ".markdown"], "output": ".md", "sniff": sniff, "priority": 10}]
 
 
 def _front_matter_end(source, lines):

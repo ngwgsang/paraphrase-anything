@@ -8,6 +8,7 @@ import re
 
 from .base import FormatError, make_segment, number, rebuild as _rebuild, split_lines
 
+_VTT = re.compile(r"^﻿?WEBVTT")
 TIMING = re.compile(
     r"^\s*(?:(\d+):)?(\d{2}):(\d{2})[,.](\d{3})\s*-->\s*(?:(\d+):)?(\d{2}):(\d{2})[,.](\d{3})")
 
@@ -46,6 +47,20 @@ def extract(source):
             duration = _seconds(*g[4:]) - _seconds(*g[:4])
             segments.append(make_segment(source, text_lines, duration=duration))
     return number(segments)
+
+
+def sniff_vtt(source):
+    """Whether ``source`` starts with a WebVTT header."""
+    return bool(_VTT.match(source))
+
+
+def sniff_srt(source):
+    """Whether ``source`` has at least one cue with a timing line."""
+    return bool(extract(source))
+
+
+SPECS = [{"name": "vtt", "extensions": [".vtt"], "output": ".vtt", "sniff": sniff_vtt, "priority": 30},
+         {"name": "srt", "extensions": [".srt"], "output": ".srt", "sniff": sniff_srt, "priority": 20}]
 
 
 def rebuild(source, rewritten):

@@ -1,6 +1,6 @@
 """Files, Long, and Variants routes inside a harness session (story 027).
 
-Pure helpers the harness calls: turning a ``.md`` / ``.srt`` / ``.vtt`` file into session prose
+Pure helpers the harness calls: turning a file in any registered format into session prose
 and back, splitting the masked text into chunks with their sentence ranges, and validating a
 multi-variant plan. They hold no session state.
 """
@@ -10,7 +10,8 @@ import re
 from . import chunk, glossary, io, lang
 from .check import Doc
 
-FILE_EXTENSIONS = {"markdown": ".md", "srt": ".srt", "vtt": ".vtt"}
+TEXT_FORMAT = io.REGISTRY.fallback
+FILE_EXTENSIONS = {name: ext for name, ext in io.OUTPUTS.items() if name != TEXT_FORMAT}
 SEGMENT_BREAK = "\n\n"
 MAX_VARIANTS = 5
 _BLOCK_BREAK = re.compile(r"(?:\r\n|\r|\n)[ \t]*(?:\r\n|\r|\n)")
@@ -22,10 +23,10 @@ class RouteError(Exception):
 
 # --- Files ------------------------------------------------------------------------------------
 
-def file_prose(source, fmt):
+def file_prose(source, fmt, opts=None):
     """``(prose, segment count)``: the rewritable segments of ``source`` joined by blank lines."""
     try:
-        segments = io.extract(source, fmt)
+        segments = io.extract(source, fmt, opts)
     except io.FormatError as e:
         raise RouteError(str(e)) from None
     if not segments:
@@ -50,10 +51,10 @@ def segment_issues(rewrite, count):
              "hint": "keep one blank-line separated block per segment of the source file"}]
 
 
-def rebuild_file(source, fmt, rewrite):
+def rebuild_file(source, fmt, rewrite, opts=None):
     """The source file with each segment replaced by the matching block of ``rewrite``."""
-    segments = io.extract(source, fmt)
-    return io.rebuild(source, fmt, {s["id"]: b for s, b in zip(segments, blocks(rewrite))})
+    segments = io.extract(source, fmt, opts)
+    return io.rebuild(source, fmt, {s["id"]: b for s, b in zip(segments, blocks(rewrite))}, opts)
 
 
 # --- Long -------------------------------------------------------------------------------------

@@ -28,6 +28,7 @@ skills/paraphrase-anything/
         ├── modes.json            # advisory bands per mode
         ├── presets.json          # harness presets: passes, gates, judge (references/presets.md)
         ├── text.py               # sentence splitting, marker matching
+        ├── io/                   # input formats: one self-registering module each (references/formats.md)
         └── lang/                 # <code>.json language data, loader, pack contract (pack.py)
 tests/                            # unittest suite
 .dev/docs/                        # local-only stories and roadmap (git-ignored)

@@ -22,7 +22,7 @@ default all five), `--gates` (comma list of gate numbers, `""` for none; default
 rewrites; needs pass `plan`), `--max-rounds` (fix rounds
 per pass, default 2), `-o` (session directory; default a new temp directory). A final floor check
 against the original runs in every configuration; `init` lists any `resolutions` it applied.
-A `.md`, `.srt`, or `.vtt` input path starts a Files session; input over ~3,000 words starts a
+An input path in any [format](formats.md) other than `.txt` starts a Files session; input over ~3,000 words starts a
 Long session (chunk by chunk). See [routes](routes.md) for the task fields these routes add.
 Other commands: `pe run status <session-dir>`, `pe run rewind <session-dir> --to <pass>`, and
 `pe run pairs <session-dir>` (the entailment pairs of the last pass's current rewrite).

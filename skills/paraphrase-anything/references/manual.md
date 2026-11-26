@@ -30,7 +30,7 @@ Contains code, inline code, URLs, LaTeX, or HTML, or the user names terms to kee
 
 ## Files
 
-A `.md`, `.srt`, or `.vtt` input, or any document where only the prose should change.
+A file in any [format](formats.md) other than plain text, or any document where only the prose should change.
 1. `pe extract notes.md -o segments.json` lists the rewritable segments (`id`, `text`). Code,
    tables, front matter, HTML, and subtitle indices and timings are never listed.
 2. Rewrite each `text` in `segments.json`, keeping every `id`. Segments that contain inline code

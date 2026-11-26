@@ -24,7 +24,7 @@ time, and gates each pass against the original. You never choose the next step y
 
 ### 1. Pin the original
 Save the user's text **verbatim** to a temp file outside the user's project, e.g.
-`<tmp>/pe-<short-id>/input.txt` (keep the extension of a `.md`, `.srt`, or `.vtt` file). Never
+`<tmp>/pe-<short-id>/input.txt` (keep the extension of a file in a [supported format](references/formats.md)). Never
 edit it: `pe run init` copies it into the session and every gate compares against that copy.
 
 ### 2. Resolve the request
@@ -49,7 +49,7 @@ Pick the preset by the request:
 python scripts/pe.py run init <tmp>/input.txt --preset standard --mode standard [--persona name] [--variants N]
 ```
 `init` prints the session directory, the passes and gates, and any `resolutions` it applied. It
-detects the route itself: Files for `.md` / `.srt` / `.vtt`, Long above ~3,000 words, Variants
+detects the route itself: Files for any [format](references/formats.md) but `.txt`, Long above ~3,000 words, Variants
 with `--variants`. See [routes](references/routes.md) for the extra task fields of each route.
 
 ### 4. Loop: next → write → submit

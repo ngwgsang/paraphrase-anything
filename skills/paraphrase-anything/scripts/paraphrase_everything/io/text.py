@@ -2,6 +2,8 @@
 
 from .base import make_segment, number, rebuild as _rebuild, split_lines
 
+SPECS = [{"name": "text", "extensions": [".txt"], "output": ".txt", "fallback": True}]
+
 
 def extract(source):
     """Return one segment per paragraph; indentation and inner line breaks stay in the source."""

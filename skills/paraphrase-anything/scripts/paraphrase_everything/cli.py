@@ -49,6 +49,12 @@ def _add_input(p):
     p.add_argument("--text", help="input text given inline")
 
 
+def _add_format_option(p):
+    """Add the repeatable ``--format-option key=value`` argument to a subparser."""
+    p.add_argument("--format-option", action="append", metavar="KEY=VALUE",
+                   help="option of the input format (repeatable); see references/formats.md")
+
+
 def cmd_protect(args):
     """Mask opaque spans; return the masked text and placeholder map."""
     text = _read_input(args)
@@ -201,10 +207,13 @@ def _format_of(args, source):
 
 
 def cmd_extract(args):
-    """List the rewritable segments of a text, Markdown, SRT, or VTT input."""
+    """List the rewritable segments of an input in any registered format."""
     source = _read_input(args)
     fmt = _format_of(args, source)
-    segments = formats.public(formats.extract(source, fmt))
+    try:
+        segments = formats.public(formats.extract(source, fmt, args.format_option))
+    except formats.FormatError as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
     result = {"ok": True, "format": fmt, "count": len(segments), "segments": segments}
     if args.output:
         _write_text(args.output, json.dumps(result, ensure_ascii=False, indent=2))
@@ -231,12 +240,12 @@ def cmd_rebuild(args):
     fmt = _format_of(args, source)
     try:
         rewritten = _rewritten_map(_read_json_file(args.segments))
-        before = {s["id"]: s["text"] for s in formats.extract(source, fmt)}
-        output = formats.rebuild(source, fmt, rewritten)
+        before = {s["id"]: s["text"] for s in formats.extract(source, fmt, args.format_option)}
+        output = formats.rebuild(source, fmt, rewritten, args.format_option)
     except (formats.FormatError, json.JSONDecodeError) as e:
         return {"ok": False, "error": str(e)}, EXIT_ERROR
     result = {"ok": True, "format": fmt, "changed": sum(1 for k, v in rewritten.items() if before[k] != v)}
-    if fmt in ("srt", "vtt"):
+    if hasattr(formats.FORMATS[fmt], "lint"):  # subtitle formats: line length and reading speed
         data = lang.load(args.lang if args.lang != "auto" else lang.detect(output))
         limits = dict(data["subtitle"])
         if args.max_line_chars is not None:
@@ -313,10 +322,11 @@ def cmd_langs(args):
     return {"ok": ok, "langs": langs}, EXIT_OK if ok else EXIT_ISSUES
 
 
-RUN_FLAGS = {"init": {"mode", "persona", "lang", "passes", "gates", "preset", "variants", "max_rounds", "output"},
+RUN_FLAGS = {"init": {"mode", "persona", "lang", "passes", "gates", "preset", "variants", "max_rounds", "output",
+                      "format_option"},
              "rewind": {"to"}}
 RUN_DEFAULTS = {"mode": None, "persona": None, "lang": "auto", "passes": None, "gates": None, "preset": None,
-                "variants": None, "max_rounds": None, "output": None, "to": None}
+                "variants": None, "max_rounds": None, "output": None, "to": None, "format_option": None}
 
 
 def cmd_run(args):
@@ -329,10 +339,12 @@ def cmd_run(args):
         if args.action == "init":
             text = _read_input(argparse.Namespace(input=args.target, text=None))
             max_rounds = harness.DEFAULT_MAX_ROUNDS if args.max_rounds is None else args.max_rounds
-            fmt = formats.EXTENSIONS.get(Path(args.target).suffix.lower(), "text") if args.target != "-" else "text"
+            fallback = formats.REGISTRY.fallback
+            fmt = formats.EXTENSIONS.get(Path(args.target).suffix.lower(), fallback) if args.target != "-" else fallback
             state = harness.init(text, args.output, mode=args.mode or "standard", persona=args.persona,
                                  lang_code=args.lang, passes=args.passes, max_rounds=max_rounds,
-                                 gates=args.gates, preset=args.preset, fmt=fmt, variants=args.variants or 1)
+                                 gates=args.gates, preset=args.preset, fmt=fmt, variants=args.variants or 1,
+                                 format_options=args.format_option)
             return {"ok": True, "session": state["session_dir"], "passes": state["passes"],
                     "gates": state["gates"], "resolutions": state["resolutions"],
                     "lang": state["lang"], "format": state["format"], "long": state["long"],
@@ -444,10 +456,11 @@ def build_parser():
     p.add_argument("--rewritten-text", help="verify mode: rewrite given inline")
     p.set_defaults(func=cmd_glossary)
 
-    p = sub.add_parser("extract", help="list rewritable segments of a text, Markdown, SRT, or VTT file")
+    p = sub.add_parser("extract", help="list rewritable segments of a document in any supported format")
     _add_input(p)
     p.add_argument("--format", default="auto", choices=["auto", *sorted(formats.FORMATS)],
                    help="input format (default: detect from extension, then content)")
+    _add_format_option(p)
     p.add_argument("-o", "--output", help="write the segments JSON here instead of the JSON result")
     p.set_defaults(func=cmd_extract)
 
@@ -457,6 +470,7 @@ def build_parser():
                    help='rewritten segments JSON: [{"id": 1, "text": "..."}] ("-" = stdin)')
     p.add_argument("--format", default="auto", choices=["auto", *sorted(formats.FORMATS)],
                    help="input format (default: detect from extension, then content)")
+    _add_format_option(p)
     p.add_argument("-o", "--output", help="write the rebuilt document here instead of the JSON result")
     p.add_argument("--lang", default="auto", help="language code for subtitle limits (default: detect)")
     p.add_argument("--max-line-chars", type=int, help="subtitle line length warning limit (default: per language)")
@@ -506,6 +520,8 @@ def build_parser():
     p.add_argument("--preset", help="init: fast, standard, or strict (from presets.json)")
     p.add_argument("--variants", type=int, help="init: number of distinct rewrites (2-5; needs pass plan)")
     p.add_argument("--max-rounds", type=int, help=f"init: fix rounds per pass (default: {harness.DEFAULT_MAX_ROUNDS})")
+    p.add_argument("--format-option", action="append", metavar="KEY=VALUE",
+                   help="init: option of the input file's format (repeatable); see references/formats.md")
     p.add_argument("--to", help="rewind: the pass to resume from")
     p.set_defaults(func=cmd_run)
 

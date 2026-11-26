@@ -1,0 +1,6 @@
+First paragraph of plain text.
+It has two lines.
+
+    Indented second paragraph.
+
+Third one.

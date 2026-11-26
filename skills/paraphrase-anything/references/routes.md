@@ -3,7 +3,7 @@
 `pe run init` picks the route from the input; the tasks then tell you what to do. This page
 explains the extra task fields each route adds.
 
-## Files (`.md`, `.srt`, `.vtt`)
+## Files (any [format](formats.md) but `.txt`)
 
 `pe run init notes.md` detects the format from the extension. The session's `original.txt` is
 the file's **prose only**: one block per segment (heading, paragraph, list item, subtitle cue),
@@ -13,8 +13,8 @@ separated by blank lines. Code, tables, front matter, HTML, and subtitle timings
   blocks, in order; never merge two blocks or split one (`segment_count_changed`). Sentences may
   still be split or merged **inside** a block.
 - Plan rows must not merge sentences from different blocks.
-- When the session completes, the harness rebuilds the file around your prose: `output.md`
-  (or `.srt`, `.vtt`) next to `output.txt`. Copy it to `name.paraphrased.md` for the user.
+- When the session completes, the harness rebuilds the file around your prose: `output<ext>` (the
+  format's extension, e.g. `output.md`) next to `output.txt`. Copy it to `name.paraphrased<ext>` for the user.
 - For subtitles keep each cue short; timings and numbering are kept for you.
 
 ## Long (over ~3,000 words)
