@@ -38,8 +38,9 @@ edit it: `pe run init` copies it into the session and every gate compares agains
 | preset | by route | see below and [presets](references/presets.md) |
 
 Pick the preset by the request:
-- `fast`: a sentence or a short paragraph of plain prose.
-- `standard`: most rewrites.
+- `fast`: only when the user asks for speed over verification. It has no entailment gate, so a
+  changed scope ("some" → "all"), negation, or condition ships unnoticed, even in one sentence.
+- `standard`: most rewrites, including a single sentence.
 - `strict`: the user wants the exact meaning kept, or the text is legal, medical, financial, or
   otherwise high-stakes. Also use it for text over ~150 words with facts that must survive.
 

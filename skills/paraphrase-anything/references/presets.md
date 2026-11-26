@@ -6,8 +6,8 @@ Without a preset or flags, every pass and gate runs.
 
 | Preset | Passes | Gates | Judge | Use when |
 |--------|--------|-------|-------|----------|
-| `fast` | style | none | self | Simple route: a sentence or a short paragraph |
-| `standard` | plan, lexis, style | g2, g4, g5 | self | most rewrites |
+| `fast` | style | none | self | the user asks for speed over verification (no entailment gate) |
+| `standard` | plan, lexis, style | g2, g4, g5 | self | most rewrites, including a single sentence |
 | `strict` | analysis, plan, structure, lexis, style | g1, g2, g3, g4, g5 | independent | "keep the exact meaning", legal, medical, or other high-stakes text |
 
 `presets.json` (next to `modes.json`) holds the same values; a test keeps this table in sync.
