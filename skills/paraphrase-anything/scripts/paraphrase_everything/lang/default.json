@@ -19,6 +19,7 @@
   "decimal_separator": ".",
   "thousands_separator": ",",
   "cliches": [],
+  "connectors": [],
   "subtitle": {"max_line_chars": 42, "max_cps": 17},
   "detect": {}
 }

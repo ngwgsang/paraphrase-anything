@@ -26,9 +26,9 @@ SCHEMA = {
     "code": str, "name": str, "length_unit": ("word", "char"), "match": ("word", "substring"),
     "has_case": bool, "detect_words": _LIST, "sentence_terminators": _LIST, "abbreviations": _LIST,
     "negation_markers": _LIST, "hedge_markers": _LIST, "decimal_separator": str,
-    "thousands_separator": str, "cliches": _LIST, "subtitle": dict, "detect": dict, "fixtures": dict,
+    "thousands_separator": str, "cliches": _LIST, "connectors": _LIST, "subtitle": dict, "detect": dict, "fixtures": dict,
 }
-OPTIONAL = {"subtitle", "fixtures"}
+OPTIONAL = {"connectors", "subtitle", "fixtures"}
 DETECT_KEYS = {"script": str, "priority": int, "min_share": (int, float), "latin_fallback": bool}
 FIXTURE_KEYS = ("detect", "sentences", "negation", "hedge")
 
@@ -195,7 +195,7 @@ def scaffold(code, name, skill_dir=SKILL_DIR, length_unit="word"):
         "match": "substring" if char else "word", "has_case": not char,
         "detect_words": [], "sentence_terminators": [".", "!", "?"], "abbreviations": [],
         "negation_markers": [], "hedge_markers": [], "decimal_separator": ".",
-        "thousands_separator": ",", "cliches": [], "detect": {},
+        "thousands_separator": ",", "cliches": [], "connectors": [], "detect": {},
         "fixtures": {key: [] for key in FIXTURE_KEYS},
     }
     data_path.parent.mkdir(parents=True, exist_ok=True)

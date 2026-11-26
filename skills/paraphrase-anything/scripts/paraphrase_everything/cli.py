@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, check, chunk, facts, glossary, harness, lang, metrics, protect
+from . import __version__, check, chunk, facts, glossary, harness, lang, lint, metrics, protect
 from . import io as formats
 from .lang import pack
 
@@ -287,6 +287,19 @@ def cmd_metrics(args):
     return report, EXIT_OK if report["ok"] else EXIT_ISSUES
 
 
+def cmd_lint(args):
+    """Lint a rewrite for readability and repetition; findings never fail the run."""
+    if args.input == "-" and args.original == "-":
+        raise SystemExit("error: only one of the rewrite and --original can be read from stdin")
+    rewrite = _read_input(args)
+    original = _read_source(args.original, args.original_text) if (args.original or args.original_text) else None
+    try:
+        report = lint.lint(rewrite, original, lang_code=args.lang, rules=lint.load_rules(args.rules))
+    except lint.LintError as e:
+        return {"ok": False, "error": str(e)}, EXIT_ERROR
+    return report, EXIT_OK
+
+
 def cmd_detect(args):
     """Detect the language of the input."""
     code = lang.detect(_read_input(args))
@@ -464,6 +477,14 @@ def build_parser():
     p.add_argument("--max-overlap", type=float, default=metrics.MAX_PAIR_OVERLAP,
                    help="pairs above this overlap are too similar (default: %(default)s)")
     p.set_defaults(func=cmd_metrics)
+
+    p = sub.add_parser("lint", help="readability and repetition lint of a rewrite (advisory, never fails)")
+    _add_input(p)
+    p.add_argument("--original", help="original file, or '-' for stdin: flag only what the rewrite introduced")
+    p.add_argument("--original-text", help="original given inline")
+    p.add_argument("--lang", default="auto", help="language code (default: detect)")
+    p.add_argument("--rules", metavar="DIR", help="directory of extra rule files (*.json) that add or override rules")
+    p.set_defaults(func=cmd_lint)
 
     p = sub.add_parser("detect", help="detect the input language")
     _add_input(p)

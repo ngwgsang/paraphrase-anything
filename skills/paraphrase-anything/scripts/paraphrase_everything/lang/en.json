@@ -88,6 +88,23 @@
     "plays a crucial role",
     "tapestry"
   ],
+  "connectors": [
+    "however",
+    "moreover",
+    "furthermore",
+    "additionally",
+    "in addition",
+    "therefore",
+    "thus",
+    "consequently",
+    "nevertheless",
+    "on the other hand",
+    "in conclusion",
+    "overall",
+    "notably",
+    "importantly",
+    "ultimately"
+  ],
   "detect": {
     "latin_fallback": true
   },

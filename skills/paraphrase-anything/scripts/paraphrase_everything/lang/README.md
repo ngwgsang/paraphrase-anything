@@ -36,7 +36,8 @@ once its fixtures pass.
 | `decimal_separator`, `thousands_separator` | Number normalisation. |
 | `detect_words` | Common words that score Latin-script text for this language. |
 | `detect` | `script` (regex character class), `priority`, `min_share`, `latin_fallback` (see below). |
-| `cliches`, `subtitle` | Clichés to avoid; subtitle limits (`max_line_chars`, `max_cps`). |
+| `cliches`, `subtitle` | Clichés to avoid (`pe lint`); subtitle limits (`max_line_chars`, `max_cps`). |
+| `connectors` | Optional. Discourse connectors that `pe lint` watches for repetition and additions. |
 | `fixtures` | `detect` (sample texts), `sentences` (`{text, count}`), `negation`, `hedge` (samples that contain a marker). |
 
 ## Detection

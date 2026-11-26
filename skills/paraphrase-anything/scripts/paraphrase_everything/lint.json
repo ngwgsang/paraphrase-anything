@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "rules": [
+    {"id": "cliche", "kind": "phrases", "source": "cliches", "severity": "warn",
+     "hint": "Stock phrase the original does not use; say the specific thing instead."},
+    {"id": "connector_repeat", "kind": "repeat", "source": "connectors", "severity": "warn", "window": 3,
+     "hint": "The same connector appears again within a few sentences; vary it or drop it."},
+    {"id": "connector_added", "kind": "added", "source": "connectors", "severity": "info",
+     "hint": "The rewrite uses this connector more often than the original; keep it only if the link is real."},
+    {"id": "dash_density", "kind": "density", "chars": ["—", "――"], "severity": "info",
+     "min_count": 2, "max_per_sentence": 0.34,
+     "hint": "Many dashes for the number of sentences; use commas, parentheses, or a new sentence instead."},
+    {"id": "sentence_length_uniform", "kind": "uniformity", "severity": "info",
+     "min_sentences": 4, "min_cv": 0.15,
+     "hint": "Sentences are all about the same length; vary them so the text does not drone."}
+  ]
+}

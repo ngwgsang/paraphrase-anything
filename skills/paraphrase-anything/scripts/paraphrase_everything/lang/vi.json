@@ -82,6 +82,20 @@
     "có thể nói rằng",
     "một cách hiệu quả"
   ],
+  "connectors": [
+    "tuy nhiên",
+    "ngoài ra",
+    "hơn nữa",
+    "bên cạnh đó",
+    "thêm vào đó",
+    "do đó",
+    "vì vậy",
+    "vì thế",
+    "mặt khác",
+    "nhìn chung",
+    "tóm lại",
+    "đặc biệt là"
+  ],
   "detect": {
     "script": "[ăâđêôơưĂÂĐÊÔƠƯẠ-ỹ]",
     "priority": 10,

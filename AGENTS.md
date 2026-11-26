@@ -20,6 +20,7 @@ skills/paraphrase-anything/
         ├── protect.py            # mask/restore opaque spans
         ├── check.py              # fidelity check (errors / warnings / accepts)
         ├── metrics.py            # divergence, length, pairwise variant metrics
+        ├── lint.py               # readability and repetition lint (advisory); rules in lint.json
         ├── harness.py            # pe run: session state machine, passes 1–5, gates
         ├── planning.py           # analysis/plan validators, plan adherence
         ├── entailment.py         # entailment pairs and verdict checks (last text gate)

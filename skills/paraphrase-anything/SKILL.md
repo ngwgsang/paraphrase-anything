@@ -69,6 +69,9 @@ Repeat until `next` returns `{"step": "done"}` or `{"step": "incomplete"}`. For 
 - At the last pass, run `pe run pairs <session-dir>` after writing the rewrite and judge every
   pair in both directions, as in [entailment](references/entailment.md). Where your tool supports
   subagents, give the pairs (not the plan) to a fresh subagent and set `"judge": "independent"`.
+- Optionally, before submitting the last pass, run `pe lint <output> --original <session-dir>/original.txt`
+  and revise only the flagged spots (clichés, repeated connectors, dashes, monotonous sentences).
+  Lint is advisory and never blocks; see [lint](references/lint.md).
 
 Pass 1 (analysis) is where you extract key facts: 3–8 short claims with literal anchors that
 every later gate re-checks; see [key facts](references/facts.md).
