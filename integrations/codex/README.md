@@ -6,7 +6,7 @@ This adapter enables automatic discovery and execution of the `paraphrase-anythi
 
 ### Option 1: Via Skills CLI (Recommended)
 ```bash
-npx skills add ngwgsang/paraphrase-everything
+npx skills add ngwgsang/paraphrase-anything
 ```
 
 ### Option 2: Copy or Symlink into Codex Skills

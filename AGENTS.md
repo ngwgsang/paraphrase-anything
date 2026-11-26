@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidelines for AI coding agents (and humans) contributing to **paraphrase-everything**.
+Guidelines for AI coding agents (and humans) contributing to **paraphrase-anything**.
 
 ## Project
 

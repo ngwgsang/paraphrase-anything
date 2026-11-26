@@ -12,7 +12,7 @@ Notes on running the `paraphrase-anything` skill across supported AI agent harne
 ## Claude Code
 
 - **Manifest:** `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
-- **Install:** `/plugin marketplace add ngwgsang/paraphrase-everything` and `/plugin install paraphrase-anything`.
+- **Install:** `/plugin marketplace add ngwgsang/paraphrase-anything` and `/plugin install paraphrase-anything`.
 - **Command:** Registered automatically via `commands/paraphrase.md`.
 
 ## Execution Model

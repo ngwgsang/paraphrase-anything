@@ -374,7 +374,7 @@ def cmd_lang(args):
 
 def build_parser():
     """Build the argparse parser with all subcommands."""
-    parser = argparse.ArgumentParser(prog="pe", description="paraphrase-everything tooling")
+    parser = argparse.ArgumentParser(prog="pe", description="paraphrase-anything tooling")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--pretty", action="store_true", help="indent JSON output")
     sub = parser.add_subparsers(dest="command", required=True)

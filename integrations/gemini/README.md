@@ -14,13 +14,13 @@ No skill content is duplicated: `GEMINI.md` and the command point at the canonic
 ## Installation
 
 ```bash
-gemini extensions install https://github.com/ngwgsang/paraphrase-everything
+gemini extensions install https://github.com/ngwgsang/paraphrase-anything
 ```
 
 For local development, link a checkout instead:
 
 ```bash
-gemini extensions link /path/to/paraphrase-everything
+gemini extensions link /path/to/paraphrase-anything
 ```
 
 ## Quickstart
